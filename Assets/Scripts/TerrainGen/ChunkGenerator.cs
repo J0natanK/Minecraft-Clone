@@ -86,7 +86,7 @@ public class ChunkGenerator : MonoBehaviour
 			indexFormat = IndexFormat.UInt32
 		};
 
-		RequestMesh(landMesh, waterMesh, offset, lod, instantCompletion, logTime);
+		RequestMesh(landMesh, waterMesh, offset, instantCompletion, logTime);
 
 		chunk.AddComponent<MeshFilter>().mesh = landMesh;
 
@@ -99,10 +99,8 @@ public class ChunkGenerator : MonoBehaviour
 		return chunk;
 	}
 
-	public void RequestMesh(Mesh landMesh, Mesh waterMesh, Vector2Int offset, int levelOfDetail, bool instantCompletion = false, bool logTime = false, NativeArray<int> customVoxelValues = default)
+	public void RequestMesh(Mesh landMesh, Mesh waterMesh, Vector2Int offset, bool instantCompletion = false, bool logTime = false, NativeArray<int> customVoxelValues = default)
 	{
-		levelOfDetail = levelOfDetail == 0 ? 1 : levelOfDetail * 2;
-
 		if (instantCompletion)
 		{
 			var jobData = new JobData
@@ -110,7 +108,6 @@ public class ChunkGenerator : MonoBehaviour
 				landMesh = landMesh,
 				waterMesh = waterMesh,
 				noiseOffset = offset,
-				lod = levelOfDetail,
 				customVoxelValues = customVoxelValues,
 				logTime = logTime
 			};
@@ -125,7 +122,6 @@ public class ChunkGenerator : MonoBehaviour
 				landMesh = landMesh,
 				waterMesh = waterMesh,
 				noiseOffset = offset,
-				lod = levelOfDetail,
 				customVoxelValues = customVoxelValues,
 				logTime = logTime
 			});

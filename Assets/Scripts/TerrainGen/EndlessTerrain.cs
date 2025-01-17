@@ -5,7 +5,6 @@ public class EndlessTerrain : MonoBehaviour
 {
 	public float maxViewDst;
 	public float colliderRange;
-	public int numLods;
 
 	public Transform viewer;
 	public ChunkGenerator chunkGenerator;
@@ -45,7 +44,7 @@ public class EndlessTerrain : MonoBehaviour
 				}
 				else
 				{
-					chunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkGenerator, maxViewDst, colliderRange, numLods));
+					chunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkGenerator, maxViewDst, colliderRange));
 				}
 			}
 		}
@@ -55,8 +54,6 @@ public class EndlessTerrain : MonoBehaviour
 	{
 		Mesh terrainMesh;
 		Mesh waterMesh;
-		Mesh[] lodTerrainMeshes;
-		Mesh[] lodWaterMeshes;
 
 		RenderParams terrainParams;
 		RenderParams waterParams;
@@ -70,12 +67,7 @@ public class EndlessTerrain : MonoBehaviour
 
 		bool hasCollider;
 
-		float newLod;
-		float lod;
-
-		int numLods;
-
-		public TerrainChunk(Vector2Int coord, ChunkGenerator chunkGen, float maxViewDst, float colliderRange, int numLods)
+		public TerrainChunk(Vector2Int coord, ChunkGenerator chunkGen, float maxViewDst, float colliderRange)
 		{
 			Vector2Int chunkDimensions = ChunkGenerator.ChunkDimensions;
 
@@ -84,15 +76,7 @@ public class EndlessTerrain : MonoBehaviour
 
 			terrainMesh = new();
 			waterMesh = new();
-
-			lodTerrainMeshes = new Mesh[numLods];
-			lodWaterMeshes = new Mesh[numLods];
-			for (int i = 0; i < numLods; i++)
-			{
-				lodTerrainMeshes[i] = new Mesh();
-				lodWaterMeshes[i] = new Mesh();
-				chunkGen.RequestMesh(lodTerrainMeshes[i], lodWaterMeshes[i], offset, i);
-			}
+			chunkGen.RequestMesh(terrainMesh, waterMesh, offset);
 
 			meshPosition = new Vector3(offset.x - (chunkDimensions.x / 2), 0, offset.y - (chunkDimensions.x / 2));
 
@@ -101,8 +85,6 @@ public class EndlessTerrain : MonoBehaviour
 
 			maxViewDstSqr = maxViewDst * maxViewDst;
 			colliderRangeSqr = colliderRange * colliderRange;
-
-			this.numLods = numLods;
 		}
 
 		public void UpdateTerrainChunk()
@@ -115,19 +97,6 @@ public class EndlessTerrain : MonoBehaviour
 			}
 
 			bool visible = viewerDstFromNearestEdge <= maxViewDstSqr;
-
-			if (visible)
-			{
-				newLod = viewerDstFromNearestEdge / maxViewDstSqr * numLods;
-
-				if (lod != newLod)
-				{
-					terrainMesh = lodTerrainMeshes[(int)newLod];
-					waterMesh = lodWaterMeshes[(int)newLod];
-
-					lod = newLod;
-				}
-			}
 
 			if (visible) Render();
 		}

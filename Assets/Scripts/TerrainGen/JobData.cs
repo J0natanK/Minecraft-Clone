@@ -9,7 +9,6 @@ class JobData
 {
 	public Mesh landMesh, waterMesh;
 	public Vector2Int noiseOffset;
-	public int lod;
 
 	public bool scheduled;
 	public bool logTime;
@@ -64,25 +63,23 @@ class JobData
 			vertices = vertices,
 			triangles = triangles,
 			uvs = uvs,
-		
+
 			waterVertices = waterVertices,
 			waterTriangles = waterTriangles,
 			waterUvs = waterUvs,
-		
+
 			thisChunkData = ChunkGenerator.ChunkDataMap[intOffset],
 			rightChunkData = ChunkGenerator.ChunkDataMap[intOffset + new int2(chunkDimensions.x, 0)],
 			leftChunkData = ChunkGenerator.ChunkDataMap[intOffset + new int2(-chunkDimensions.x, 0)],
 			frontChunkData = ChunkGenerator.ChunkDataMap[intOffset + new int2(0, chunkDimensions.x)],
 			backChunkData = ChunkGenerator.ChunkDataMap[intOffset + new int2(0, -chunkDimensions.x)],
-		
+
 			faceDirections = ChunkGenerator.faceDirections,
 			uvCordinates = ChunkGenerator.uvCoordinates,
 			faceVertices = ChunkGenerator.faceVertices,
 			chunkDimensions = new int2(chunkDimensions.x, chunkDimensions.y),
-		
-			lod = lod
 		};
-		
+
 		handle = job.Schedule();
 		scheduled = true;
 	}

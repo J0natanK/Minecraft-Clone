@@ -21,8 +21,6 @@ struct MeshBuildJob : IJob
 
 	[ReadOnly] public int2 chunkDimensions;
 
-	[ReadOnly] public int lod;
-
 	//Neighbouring chunks
 	[ReadOnly] public NativeArray<int> thisChunkData;
 	[ReadOnly] public NativeArray<int> leftChunkData;
@@ -32,11 +30,11 @@ struct MeshBuildJob : IJob
 
 	public void Execute()
 	{
-		for (int x = 0; x < chunkDimensions.x; x += lod)
+		for (int x = 0; x < chunkDimensions.x; x++)
 		{
-			for (int y = 0; y < chunkDimensions.y; y += lod)
+			for (int y = 0; y < chunkDimensions.y; y++)
 			{
-				for (int z = 0; z < chunkDimensions.x; z += lod)
+				for (int z = 0; z < chunkDimensions.x; z++)
 				{
 					int blockIndex = thisChunkData[Utils.VoxelIndex(x, y, z)];
 					if (blockIndex != 0)
@@ -74,7 +72,7 @@ struct MeshBuildJob : IJob
 
 		for (int j = 0; j < 4; j++)
 		{
-			vertices.Add(faceVertices[(i * 4) + j] * lod + quadPos);
+			vertices.Add(faceVertices[(i * 4) + j] + quadPos);
 		}
 
 		triangles.Add(vertCount);
@@ -96,7 +94,7 @@ struct MeshBuildJob : IJob
 
 		for (int j = 0; j < 4; j++)
 		{
-			waterVertices.Add(faceVertices[(i * 4) + j] * lod + quadPos);
+			waterVertices.Add(faceVertices[(i * 4) + j] + quadPos);
 		}
 
 		waterTriangles.Add(vertCount);
@@ -114,7 +112,7 @@ struct MeshBuildJob : IJob
 
 	private bool IsFaceVisible(int x, int y, int z, int faceIndex)
 	{
-		int3 direction = faceDirections[faceIndex] * lod;
+		int3 direction = faceDirections[faceIndex];
 		int3 neighbor = new int3(x + direction.x, y + direction.y, z + direction.z);
 
 		if (neighbor.y < 0 || neighbor.y >= chunkDimensions.y)
