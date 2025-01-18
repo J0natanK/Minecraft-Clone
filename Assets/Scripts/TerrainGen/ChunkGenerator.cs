@@ -14,12 +14,12 @@ public class ChunkGenerator : MonoBehaviour
 	public int maxJobsPerFrame;
 
 	public static readonly Vector2Int ChunkDimensions = new Vector2Int(32, 200);
-	public static Noise noise;
-	public static bool loadedTerrain;
-	public static NativeArray<int3> faceVertices;
-	public static NativeArray<int3> faceDirections;
-	public static NativeArray<float2> uvCoordinates;
-	public static NativeHashMap<int2, NativeArray<int>> ChunkDataMap;
+	public static Noise Noise;
+	public static bool LoadedTerrain;
+	public static NativeArray<int3> FaceVertices;
+	public static NativeArray<int3> FaceDirections;
+	public static NativeArray<float2> UvCoordinates;
+	public static NativeHashMap<int2, NativeArray<int>> VoxelGridMap;
 
 	List<JobData> jobList;
 	List<JobData> jobQueue;
@@ -62,7 +62,7 @@ public class ChunkGenerator : MonoBehaviour
 	{
 		if (jobQueue.Count == 0)
 		{
-			loadedTerrain = true;
+			LoadedTerrain = true;
 		}
 	}
 
@@ -108,7 +108,7 @@ public class ChunkGenerator : MonoBehaviour
 				landMesh = landMesh,
 				waterMesh = waterMesh,
 				noiseOffset = offset,
-				customVoxelValues = customVoxelValues,
+				customVoxelGrid = customVoxelValues,
 				logTime = logTime
 			};
 
@@ -122,7 +122,7 @@ public class ChunkGenerator : MonoBehaviour
 				landMesh = landMesh,
 				waterMesh = waterMesh,
 				noiseOffset = offset,
-				customVoxelValues = customVoxelValues,
+				customVoxelGrid = customVoxelValues,
 				logTime = logTime
 			});
 		}
@@ -130,67 +130,67 @@ public class ChunkGenerator : MonoBehaviour
 
 	public void Initialize()
 	{
-		ChunkDataMap = new NativeHashMap<int2, NativeArray<int>>(1024, Allocator.Persistent);
+		VoxelGridMap = new NativeHashMap<int2, NativeArray<int>>(1024, Allocator.Persistent);
 		jobList = new();
 		jobQueue = new();
 
-		noise = new Noise(properties);
+		Noise = new Noise(properties);
 
-		faceVertices = new NativeArray<int3>(24, Allocator.Persistent);
+		FaceVertices = new NativeArray<int3>(24, Allocator.Persistent);
 
 		//Bottom face
-		faceVertices[0] = new int3(1, 0, 0);
-		faceVertices[1] = new int3(1, 0, 1);
-		faceVertices[2] = new int3(0, 0, 1);
-		faceVertices[3] = new int3(0, 0, 0);
+		FaceVertices[0] = new int3(1, 0, 0);
+		FaceVertices[1] = new int3(1, 0, 1);
+		FaceVertices[2] = new int3(0, 0, 1);
+		FaceVertices[3] = new int3(0, 0, 0);
 
 		//Front face
-		faceVertices[4] = new int3(1, 0, 1);
-		faceVertices[5] = new int3(1, 1, 1);
-		faceVertices[6] = new int3(0, 1, 1);
-		faceVertices[7] = new int3(0, 0, 1);
+		FaceVertices[4] = new int3(1, 0, 1);
+		FaceVertices[5] = new int3(1, 1, 1);
+		FaceVertices[6] = new int3(0, 1, 1);
+		FaceVertices[7] = new int3(0, 0, 1);
 
 		//Back face
-		faceVertices[8] = new int3(0, 0, 0);
-		faceVertices[9] = new int3(0, 1, 0);
-		faceVertices[10] = new int3(1, 1, 0);
-		faceVertices[11] = new int3(1, 0, 0);
+		FaceVertices[8] = new int3(0, 0, 0);
+		FaceVertices[9] = new int3(0, 1, 0);
+		FaceVertices[10] = new int3(1, 1, 0);
+		FaceVertices[11] = new int3(1, 0, 0);
 
 		//Left face
-		faceVertices[12] = new int3(0, 0, 1);
-		faceVertices[13] = new int3(0, 1, 1);
-		faceVertices[14] = new int3(0, 1, 0);
-		faceVertices[15] = new int3(0, 0, 0);
+		FaceVertices[12] = new int3(0, 0, 1);
+		FaceVertices[13] = new int3(0, 1, 1);
+		FaceVertices[14] = new int3(0, 1, 0);
+		FaceVertices[15] = new int3(0, 0, 0);
 
 		//Right face
-		faceVertices[16] = new int3(1, 0, 0);
-		faceVertices[17] = new int3(1, 1, 0);
-		faceVertices[18] = new int3(1, 1, 1);
-		faceVertices[19] = new int3(1, 0, 1);
+		FaceVertices[16] = new int3(1, 0, 0);
+		FaceVertices[17] = new int3(1, 1, 0);
+		FaceVertices[18] = new int3(1, 1, 1);
+		FaceVertices[19] = new int3(1, 0, 1);
 
 		//Top face
-		faceVertices[20] = new int3(0, 1, 0);
-		faceVertices[21] = new int3(0, 1, 1);
-		faceVertices[22] = new int3(1, 1, 1);
-		faceVertices[23] = new int3(1, 1, 0);
+		FaceVertices[20] = new int3(0, 1, 0);
+		FaceVertices[21] = new int3(0, 1, 1);
+		FaceVertices[22] = new int3(1, 1, 1);
+		FaceVertices[23] = new int3(1, 1, 0);
 
-		uvCoordinates = new NativeArray<float2>(6, Allocator.Persistent);
+		UvCoordinates = new NativeArray<float2>(6, Allocator.Persistent);
 
-		uvCoordinates[0] = new float2(.5f, 0);
-		uvCoordinates[1] = new float2(.5f, .5f);
-		uvCoordinates[2] = new float2(.5f, .5f);
-		uvCoordinates[3] = new float2(.5f, .5f);
-		uvCoordinates[4] = new float2(.5f, .5f);
-		uvCoordinates[5] = new float2(0, 0);
+		UvCoordinates[0] = new float2(.5f, 0);
+		UvCoordinates[1] = new float2(.5f, .5f);
+		UvCoordinates[2] = new float2(.5f, .5f);
+		UvCoordinates[3] = new float2(.5f, .5f);
+		UvCoordinates[4] = new float2(.5f, .5f);
+		UvCoordinates[5] = new float2(0, 0);
 
-		faceDirections = new NativeArray<int3>(6, Allocator.Persistent);
+		FaceDirections = new NativeArray<int3>(6, Allocator.Persistent);
 
-		faceDirections[0] = new int3(0, -1, 0); // Down
-		faceDirections[1] = new int3(0, 0, 1);  // Forward
-		faceDirections[2] = new int3(0, 0, -1); // Back
-		faceDirections[3] = new int3(-1, 0, 0); // Left
-		faceDirections[4] = new int3(1, 0, 0);  // Right
-		faceDirections[5] = new int3(0, 1, 0);  // Up
+		FaceDirections[0] = new int3(0, -1, 0); // Down
+		FaceDirections[1] = new int3(0, 0, 1);  // Forward
+		FaceDirections[2] = new int3(0, 0, -1); // Back
+		FaceDirections[3] = new int3(-1, 0, 0); // Left
+		FaceDirections[4] = new int3(1, 0, 0);  // Right
+		FaceDirections[5] = new int3(0, 1, 0);  // Up
 	}
 
 	public void Dispose()
@@ -203,15 +203,15 @@ public class ChunkGenerator : MonoBehaviour
 			}
 		}
 
-		foreach (var chunk in ChunkDataMap)
+		foreach (var chunk in VoxelGridMap)
 		{
 			chunk.Value.Dispose();
 		}
-		ChunkDataMap.Dispose();
+		VoxelGridMap.Dispose();
 
-		faceVertices.Dispose();
-		faceDirections.Dispose();
-		uvCoordinates.Dispose();
-		noise.Dispose();
+		FaceVertices.Dispose();
+		FaceDirections.Dispose();
+		UvCoordinates.Dispose();
+		Noise.Dispose();
 	}
 }

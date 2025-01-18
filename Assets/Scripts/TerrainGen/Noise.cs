@@ -25,7 +25,7 @@ public class Noise
 			amplitudes[i] = math.pow(properties.persistance, i);
 		}
 	}
-    
+
 	public void Dispose()
 	{
 		frequencies.Dispose();
@@ -33,13 +33,13 @@ public class Noise
 		curve.Dispose();
 	}
 
-	public NativeArray<int> GenerateVoxelValues(Vector2Int offset)
+	public NativeArray<int> GenerateVoxelGrid(Vector2Int offset)
 	{
 		int size = ChunkGenerator.ChunkDimensions.x * ChunkGenerator.ChunkDimensions.y * ChunkGenerator.ChunkDimensions.x;
 		NativeArray<int> voxelValues = new(size, Allocator.Persistent);
 
 		NoiseJob job = new()
-        {
+		{
 			voxelValues = voxelValues,
 			chunkDimensions = new int2(ChunkGenerator.ChunkDimensions.x, ChunkGenerator.ChunkDimensions.y),
 			offset = new int2(offset.x, offset.y),
@@ -60,9 +60,9 @@ public class Noise
 			frequency = properties.frequency,
 			noise3DContribution = properties.noise3DContribution,
 			random = new Unity.Mathematics.Random((uint)UnityEngine.Random.Range(uint.MinValue, uint.MaxValue))
-		
+
 		};
-		
+
 		job.Schedule(ChunkGenerator.ChunkDimensions.x * ChunkGenerator.ChunkDimensions.x, 1).Complete();
 
 		return voxelValues;

@@ -58,7 +58,7 @@ public class BlockBreakingAndPlacing : MonoBehaviour
         if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, maxReach, mask))
         {
             coordinates = new int2((int)hit.collider.transform.position.x + (ChunkGenerator.ChunkDimensions.x / 2), (int)hit.collider.transform.position.z + (ChunkGenerator.ChunkDimensions.x / 2));
-            NativeArray<int> voxelValues = ChunkGenerator.ChunkDataMap[coordinates];
+            NativeArray<int> voxelValues = ChunkGenerator.VoxelGridMap[coordinates];
 
             int x = Mathf.Abs((int)(hit.collider.transform.position.x - Mathf.Round(hit.point.x - 0.5f)));
             int y = placeBlock ? Mathf.Abs(Mathf.RoundToInt(hit.point.y)) : Mathf.Abs(Mathf.RoundToInt(hit.point.y)) - 1;

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -22,11 +21,11 @@ struct MeshBuildJob : IJob
 	[ReadOnly] public int2 chunkDimensions;
 
 	//Neighbouring chunks
-	[ReadOnly] public NativeArray<int> thisChunkData;
-	[ReadOnly] public NativeArray<int> leftChunkData;
-	[ReadOnly] public NativeArray<int> rightChunkData;
-	[ReadOnly] public NativeArray<int> frontChunkData;
-	[ReadOnly] public NativeArray<int> backChunkData;
+	[ReadOnly] public NativeArray<int> thisVoxelGrid;
+	[ReadOnly] public NativeArray<int> leftVoxelGrid;
+	[ReadOnly] public NativeArray<int> rightVoxelGrid;
+	[ReadOnly] public NativeArray<int> frontVoxelGrid;
+	[ReadOnly] public NativeArray<int> backVoxelGrid;
 
 	public void Execute()
 	{
@@ -36,8 +35,8 @@ struct MeshBuildJob : IJob
 			{
 				for (int z = 0; z < chunkDimensions.x; z++)
 				{
-					int blockIndex = thisChunkData[Utils.VoxelIndex(x, y, z)];
-					if (blockIndex != 0)
+					int blockIndex = thisVoxelGrid[Utils.VoxelIndex(x, y, z)];
+					if (blockIndex != Blocks.Air)
 					{
 						AddVoxel(x, y, z, blockIndex);
 					}
@@ -49,11 +48,11 @@ struct MeshBuildJob : IJob
 
 	private void AddVoxel(int x, int y, int z, int blockIndex)
 	{
-		FaceUVs blockUVs = GetBlockUVs(blockIndex);
+		FaceUVs blockUVs = Blocks.GetUVs(blockIndex);
 
-		if (blockIndex == 5)
+		if (blockIndex == Blocks.Water)
 		{
-			AddWaterQuad(new int3(x, y, z), 5);
+			AddWaterQuad(new int3(x, y, z));
 			return;
 		}
 
@@ -66,13 +65,13 @@ struct MeshBuildJob : IJob
 		}
 	}
 
-	private void AddQuad(int3 quadPos, int i, float2 bottomLeftUV)
+	private void AddQuad(int3 pos, int faceIndex, float2 bottomLeftUV)
 	{
 		int vertCount = vertices.Length;
 
 		for (int j = 0; j < 4; j++)
 		{
-			vertices.Add(faceVertices[(i * 4) + j] + quadPos);
+			vertices.Add(faceVertices[(faceIndex * 4) + j] + pos);
 		}
 
 		triangles.Add(vertCount);
@@ -88,13 +87,14 @@ struct MeshBuildJob : IJob
 		uvs.Add(bottomLeftUV);
 	}
 
-	private void AddWaterQuad(int3 quadPos, int i)
+	private void AddWaterQuad(int3 quadPos)
 	{
 		int vertCount = waterVertices.Length;
+		int vertexIndex = 20;
 
 		for (int j = 0; j < 4; j++)
 		{
-			waterVertices.Add(faceVertices[(i * 4) + j] + quadPos);
+			waterVertices.Add(faceVertices[vertexIndex + j] + quadPos);
 		}
 
 		waterTriangles.Add(vertCount);
@@ -119,136 +119,22 @@ struct MeshBuildJob : IJob
 			return false;
 
 		if (neighbor.x < 0)
-			return leftChunkData[Utils.VoxelIndex(chunkDimensions.x - 1, neighbor.y, neighbor.z)] == 0 ||
-				leftChunkData[Utils.VoxelIndex(chunkDimensions.x - 1, neighbor.y, neighbor.z)] == 5;
+			return leftVoxelGrid[Utils.VoxelIndex(chunkDimensions.x - 1, neighbor.y, neighbor.z)] == Blocks.Air ||
+				leftVoxelGrid[Utils.VoxelIndex(chunkDimensions.x - 1, neighbor.y, neighbor.z)] == Blocks.Water;
 
 		if (neighbor.x >= chunkDimensions.x)
-			return rightChunkData[Utils.VoxelIndex(0, neighbor.y, neighbor.z)] == 0 ||
-				rightChunkData[Utils.VoxelIndex(0, neighbor.y, neighbor.z)] == 5;
+			return rightVoxelGrid[Utils.VoxelIndex(0, neighbor.y, neighbor.z)] == Blocks.Air ||
+				rightVoxelGrid[Utils.VoxelIndex(0, neighbor.y, neighbor.z)] == Blocks.Water;
 
 		if (neighbor.z < 0)
-			return backChunkData[Utils.VoxelIndex(neighbor.x, neighbor.y, chunkDimensions.x - 1)] == 0 ||
-				backChunkData[Utils.VoxelIndex(neighbor.x, neighbor.y, chunkDimensions.x - 1)] == 5;
+			return backVoxelGrid[Utils.VoxelIndex(neighbor.x, neighbor.y, chunkDimensions.x - 1)] == Blocks.Air ||
+				backVoxelGrid[Utils.VoxelIndex(neighbor.x, neighbor.y, chunkDimensions.x - 1)] == Blocks.Water;
 
 		if (neighbor.z >= chunkDimensions.x)
-			return frontChunkData[Utils.VoxelIndex(neighbor.x, neighbor.y, 0)] == 0 ||
-				frontChunkData[Utils.VoxelIndex(neighbor.x, neighbor.y, 0)] == 5;
+			return frontVoxelGrid[Utils.VoxelIndex(neighbor.x, neighbor.y, 0)] == Blocks.Air ||
+				frontVoxelGrid[Utils.VoxelIndex(neighbor.x, neighbor.y, 0)] == Blocks.Water;
 
-		return thisChunkData[Utils.VoxelIndex(neighbor.x, neighbor.y, neighbor.z)] == 0 ||
-			thisChunkData[Utils.VoxelIndex(neighbor.x, neighbor.y, neighbor.z)] == 5;
-	}
-
-	//Get the bottom left UV for all 6 faces
-	public FaceUVs GetBlockUVs(int blockIndex)
-	{
-		FaceUVs uvs = new FaceUVs();
-		switch (blockIndex)
-		{
-			case 1:
-				uvs = new FaceUVs()
-				{
-					uv0 = new float2(0, 0),
-					uv1 = new float2(0, 0),
-					uv2 = new float2(0, 0),
-					uv3 = new float2(0, 0),
-					uv4 = new float2(0, 0),
-					uv5 = new float2(0, 0)
-				};
-
-				break;
-
-			case 2:
-				uvs = new FaceUVs()
-				{
-					uv0 = new float2(0, .4f),
-					uv1 = new float2(0, .4f),
-					uv2 = new float2(0, .4f),
-					uv3 = new float2(0, .4f),
-					uv4 = new float2(0, .4f),
-					uv5 = new float2(0, .4f)
-				};
-				break;
-			case 3:
-				uvs = new FaceUVs()
-				{
-					uv0 = new float2(0, .4f),
-					uv1 = new float2(.5f, .4f),
-					uv2 = new float2(.5f, .4f),
-					uv3 = new float2(.5f, .4f),
-					uv4 = new float2(.5f, .4f),
-					uv5 = new float2(0, .2f)
-				};
-				break;
-			case 4:
-				uvs = new FaceUVs()
-				{
-					uv0 = new float2(.5f, 0),
-					uv1 = new float2(.5f, 0),
-					uv2 = new float2(.5f, 0),
-					uv3 = new float2(.5f, 0),
-					uv4 = new float2(.5f, 0),
-					uv5 = new float2(.5f, 0)
-				};
-				break;
-			case 5:
-				uvs = new FaceUVs()
-				{
-					uv0 = new float2(.5f, .2f),
-					uv1 = new float2(.5f, .2f),
-					uv2 = new float2(.5f, .2f),
-					uv3 = new float2(.5f, .2f),
-					uv4 = new float2(.5f, .2f),
-					uv5 = new float2(.5f, .2f)
-				};
-				break;
-			case 6:
-				uvs = new FaceUVs()
-				{
-					uv0 = new float2(0, .8f),
-					uv1 = new float2(.5f, .6f),
-					uv2 = new float2(.5f, .6f),
-					uv3 = new float2(.5f, .6f),
-					uv4 = new float2(.5f, .6f),
-					uv5 = new float2(0, .8f)
-				};
-				break;
-			case 7:
-				uvs = new FaceUVs()
-				{
-					uv0 = new float2(0, .6f),
-					uv1 = new float2(0, .6f),
-					uv2 = new float2(0, .6f),
-					uv3 = new float2(0, .6f),
-					uv4 = new float2(0, .6f),
-					uv5 = new float2(0, .6f)
-				};
-				break;
-		}
-
-		return uvs;
-	}
-
-	public struct FaceUVs
-	{
-		public float2 uv0;
-		public float2 uv1;
-		public float2 uv2;
-		public float2 uv3;
-		public float2 uv4;
-		public float2 uv5;
-
-		public float2 GetUV(int i)
-		{
-			switch (i)
-			{
-				case 0: return uv0;
-				case 1: return uv1;
-				case 2: return uv2;
-				case 3: return uv3;
-				case 4: return uv4;
-				case 5: return uv5;
-				default: return new float2(0, 0);
-			}
-		}
+		return thisVoxelGrid[Utils.VoxelIndex(neighbor.x, neighbor.y, neighbor.z)] == Blocks.Air ||
+			thisVoxelGrid[Utils.VoxelIndex(neighbor.x, neighbor.y, neighbor.z)] == Blocks.Water;
 	}
 }
