@@ -32,6 +32,8 @@ struct NoiseJob : IJobParallelFor
 	[ReadOnly] public float persistance;
 	[ReadOnly] public float frequency;
 
+	[ReadOnly] public float skipThreshold;
+
 	[ReadOnly] public Random random;
 
 	public void Execute(int i)

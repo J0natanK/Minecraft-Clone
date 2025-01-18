@@ -13,7 +13,7 @@ public class ChunkGenerator : MonoBehaviour
 	[Header("Performance")]
 	public int maxJobsPerFrame;
 
-	public static readonly Vector2Int ChunkDimensions = new Vector2Int(32, 200);
+	public static readonly Vector2Int ChunkDimensions = new Vector2Int(32, 300);
 	public static Noise Noise;
 	public static bool LoadedTerrain;
 	public static NativeArray<int3> FaceVertices;
