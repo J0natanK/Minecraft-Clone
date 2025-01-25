@@ -213,10 +213,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e388eed8a052e5447a1d3f6752473760, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxReach: 10
+  maxReach: 0
   mask:
     serializedVersion: 2
-    m_Bits: 51
+    m_Bits: 0
 --- !u!21 &268476591
 Material:
   serializedVersion: 8
@@ -1085,7 +1085,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxViewDst: 700
   colliderRange: 20
-  numLods: 1
   viewer: {fileID: 1909131461}
   chunkGenerator: {fileID: 1731279922}
 --- !u!114 &1731279925

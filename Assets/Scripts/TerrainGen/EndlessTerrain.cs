@@ -66,6 +66,7 @@ public class EndlessTerrain : MonoBehaviour
 		float colliderRangeSqr;
 
 		bool hasCollider;
+		GameObject collider;
 
 		public TerrainChunk(Vector2Int coord, ChunkGenerator chunkGen, float maxViewDst, float colliderRange)
 		{
@@ -93,7 +94,16 @@ public class EndlessTerrain : MonoBehaviour
 
 			if (viewerDstFromNearestEdge < colliderRangeSqr && !hasCollider)
 			{
+				collider = new GameObject("Collider");
+				collider.transform.position = meshPosition;
+				collider.AddComponent<MeshCollider>().sharedMesh = terrainMesh;
+
 				hasCollider = true;
+			}
+			if (hasCollider && viewerDstFromNearestEdge > colliderRangeSqr)
+			{
+				collider.SetActive(false);
+				hasCollider = false;
 			}
 
 			bool visible = viewerDstFromNearestEdge <= maxViewDstSqr;
