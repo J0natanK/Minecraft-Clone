@@ -75,7 +75,7 @@ Material:
     - _ShadowBack: 0.95
     - _ShadowDown: 0.4
     - _ShadowForward: 0.45
-    - _ShadowLeft: 0.45
+    - _ShadowLeft: 0.73
     - _ShadowRight: 0.7
     - _ShadowUp: 1
     - _SmoothnessTextureChannel: 0

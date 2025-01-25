@@ -38,7 +38,7 @@ Shader "Unlit/TerrainShader"
                 float2 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
-                float3 normal : TEXCOORD1;
+                float3 normal : TEXCOORD2;
             };
 
             sampler2D _MainTex;
@@ -63,8 +63,6 @@ Shader "Unlit/TerrainShader"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                UNITY_APPLY_FOG(i.fogCoord, col);
-
                 float3 n = i.normal;
                 fixed4 color = tex2D(_MainTex, i.uv);
 
@@ -82,8 +80,11 @@ Shader "Unlit/TerrainShader"
                     color *= _ShadowBack;
                 else
                     color *= fixed4(1, 1, 1, 1); // Default White
-
+                
+                UNITY_APPLY_FOG(i.fogCoord, color);
                 return color;
+
+
             }
             ENDCG
         }
