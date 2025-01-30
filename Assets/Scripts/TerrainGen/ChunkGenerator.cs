@@ -19,7 +19,7 @@ public class ChunkGenerator : MonoBehaviour
 	public static NativeArray<int3> FaceVertices;
 	public static NativeArray<int3> FaceDirections;
 	public static NativeArray<float2> UvCoordinates;
-	public static NativeHashMap<int2, NativeArray<int>> VoxelGridMap;
+	public static NativeHashMap<Vector2Int, NativeArray<int>> VoxelGridMap;
 
 	List<JobData> jobList;
 	List<JobData> jobQueue;
@@ -99,7 +99,7 @@ public class ChunkGenerator : MonoBehaviour
 		return chunk;
 	}
 
-	public void RequestMesh(Mesh landMesh, Mesh waterMesh, Vector2Int offset, bool instantCompletion = false, bool logTime = false, NativeArray<int> customVoxelValues = default)
+	public void RequestMesh(Mesh landMesh, Mesh waterMesh, Vector2Int offset, bool instantCompletion = false, bool logTime = false, NativeArray<int> customVoxelGrid = default)
 	{
 		if (instantCompletion)
 		{
@@ -107,8 +107,8 @@ public class ChunkGenerator : MonoBehaviour
 			{
 				landMesh = landMesh,
 				waterMesh = waterMesh,
-				noiseOffset = offset,
-				customVoxelGrid = customVoxelValues,
+				offset = offset,
+				customVoxelGrid = customVoxelGrid,
 				logTime = logTime
 			};
 
@@ -121,8 +121,8 @@ public class ChunkGenerator : MonoBehaviour
 			{
 				landMesh = landMesh,
 				waterMesh = waterMesh,
-				noiseOffset = offset,
-				customVoxelGrid = customVoxelValues,
+				offset = offset,
+				customVoxelGrid = customVoxelGrid,
 				logTime = logTime
 			});
 		}
@@ -130,7 +130,7 @@ public class ChunkGenerator : MonoBehaviour
 
 	public void Initialize()
 	{
-		VoxelGridMap = new NativeHashMap<int2, NativeArray<int>>(1024, Allocator.Persistent);
+		VoxelGridMap = new NativeHashMap<Vector2Int, NativeArray<int>>(1024, Allocator.Persistent);
 		jobList = new();
 		jobQueue = new();
 
