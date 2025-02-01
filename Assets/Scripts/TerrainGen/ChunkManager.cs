@@ -14,12 +14,12 @@ public class ChunkManager : MonoBehaviour
 	public int maxJobsPerFrame;
 
 	public static readonly Vector2Int ChunkDimensions = new Vector2Int(32, 300);
-	public static VoxelGen Noise;
+	public static VoxelGen VoxelGen;
 	public static bool LoadedTerrain;
 	public static NativeArray<int3> FaceVertices;
 	public static NativeArray<int3> FaceDirections;
 	public static NativeArray<float2> UvCoordinates;
-	public static NativeHashMap<Vector2Int, NativeArray<int>> VoxelGridMap;
+	public static NativeHashMap<Vector2Int, NativeArray<byte>> VoxelGridMap;
 
 	List<ChunkBuilder> jobList;
 	List<ChunkBuilder> jobQueue;
@@ -99,7 +99,7 @@ public class ChunkManager : MonoBehaviour
 		return chunk;
 	}
 
-	public void RequestMesh(Mesh landMesh, Mesh waterMesh, Vector2Int offset, bool instantCompletion = false, bool logTime = false, NativeArray<int> customVoxelGrid = default)
+	public void RequestMesh(Mesh landMesh, Mesh waterMesh, Vector2Int offset, bool instantCompletion = false, bool logTime = false, NativeArray<byte> customVoxelGrid = default)
 	{
 		if (instantCompletion)
 		{
@@ -130,11 +130,11 @@ public class ChunkManager : MonoBehaviour
 
 	public void Initialize()
 	{
-		VoxelGridMap = new NativeHashMap<Vector2Int, NativeArray<int>>(1024, Allocator.Persistent);
+		VoxelGridMap = new NativeHashMap<Vector2Int, NativeArray<byte>>(1024, Allocator.Persistent);
 		jobList = new();
 		jobQueue = new();
 
-		Noise = new VoxelGen(properties);
+		VoxelGen = new VoxelGen(properties);
 
 		FaceVertices = new NativeArray<int3>(24, Allocator.Persistent);
 
@@ -212,6 +212,6 @@ public class ChunkManager : MonoBehaviour
 		FaceVertices.Dispose();
 		FaceDirections.Dispose();
 		UvCoordinates.Dispose();
-		Noise.Dispose();
+		VoxelGen.Dispose();
 	}
 }

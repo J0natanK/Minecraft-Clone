@@ -17,7 +17,7 @@ class ChunkBuilder
 
 	public JobHandle handle;
 
-	public NativeArray<int> customVoxelGrid;
+	public NativeArray<byte> customVoxelGrid;
 
 	public NativeList<float3> vertices;
 	public NativeList<int> triangles;
@@ -47,7 +47,7 @@ class ChunkBuilder
 		if (customVoxelGrid == default)
 		{
 			if (!ChunkManager.VoxelGridMap.ContainsKey(offset))
-				ChunkManager.VoxelGridMap.Add(offset, ChunkManager.Noise.GenerateVoxelGrid(offset));
+				ChunkManager.VoxelGridMap.Add(offset, ChunkManager.VoxelGen.GenerateVoxelGrid(offset));
 		}
 		else
 		{
@@ -153,7 +153,7 @@ class ChunkBuilder
 	private void AddNeighboringChunks(Vector2Int offset)
 	{
 		Vector2Int chunkDimensions = ChunkManager.ChunkDimensions;
-		VoxelGen noise = ChunkManager.Noise;
+		VoxelGen noise = ChunkManager.VoxelGen;
 
 		if (!ChunkManager.VoxelGridMap.ContainsKey(offset + new Vector2Int(chunkDimensions.x, 0)))
 			ChunkManager.VoxelGridMap.Add(offset + new Vector2Int(chunkDimensions.x, 0), noise.GenerateVoxelGrid(offset + Vector2Int.right * chunkDimensions.x));

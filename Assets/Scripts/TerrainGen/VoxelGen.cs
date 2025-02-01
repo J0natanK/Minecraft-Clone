@@ -33,10 +33,10 @@ public class VoxelGen
 		curve.Dispose();
 	}
 
-	public NativeArray<int> GenerateVoxelGrid(Vector2Int offset)
+	public NativeArray<byte> GenerateVoxelGrid(Vector2Int offset)
 	{
 		int size = ChunkManager.ChunkDimensions.x * ChunkManager.ChunkDimensions.y * ChunkManager.ChunkDimensions.x;
-		NativeArray<int> voxelValues = new(size, Allocator.Persistent);
+		NativeArray<byte> voxelValues = new(size, Allocator.Persistent);
 
 		VoxelGridJob job = new()
 		{

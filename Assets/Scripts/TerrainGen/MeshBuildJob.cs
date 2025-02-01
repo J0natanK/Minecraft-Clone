@@ -21,11 +21,11 @@ struct MeshBuildJob : IJob
 	[ReadOnly] public int2 chunkDimensions;
 
 	//Neighbouring chunks
-	[ReadOnly] public NativeArray<int> thisVoxelGrid;
-	[ReadOnly] public NativeArray<int> leftVoxelGrid;
-	[ReadOnly] public NativeArray<int> rightVoxelGrid;
-	[ReadOnly] public NativeArray<int> frontVoxelGrid;
-	[ReadOnly] public NativeArray<int> backVoxelGrid;
+	[ReadOnly] public NativeArray<byte> thisVoxelGrid;
+	[ReadOnly] public NativeArray<byte> leftVoxelGrid;
+	[ReadOnly] public NativeArray<byte> rightVoxelGrid;
+	[ReadOnly] public NativeArray<byte> frontVoxelGrid;
+	[ReadOnly] public NativeArray<byte> backVoxelGrid;
 
 	public void Execute()
 	{

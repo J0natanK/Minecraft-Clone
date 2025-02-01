@@ -38,7 +38,7 @@ public class BlockBreakingAndPlacing : MonoBehaviour
 			return;
 		}
 
-		NativeArray<int> voxelGrid = ChunkManager.VoxelGridMap[chunkKey * ChunkManager.ChunkDimensions.x];
+		NativeArray<byte> voxelGrid = ChunkManager.VoxelGridMap[chunkKey * ChunkManager.ChunkDimensions.x];
 
 		Vector3Int offset = new Vector3Int(Mathf.Min((int)hit.normal.x, 0), Mathf.Min((int)hit.normal.y, 0), Mathf.Min((int)hit.normal.z, 0));
 		offset = placeBlock ? offset : new Vector3Int(Mathf.Min(-(int)hit.normal.x, 0), Mathf.Min(-(int)hit.normal.y, 0), Mathf.Min(-(int)hit.normal.z, 0));
@@ -69,7 +69,7 @@ public class BlockBreakingAndPlacing : MonoBehaviour
 	void UpdateChunk(Vector2Int key, Vector2Int coord)
 	{
 		TerrainChunk chunk = EndlessTerrain.ChunkDictionary[key];
-		NativeArray<int> voxelGrid = ChunkManager.VoxelGridMap[key * ChunkManager.ChunkDimensions.x];
+		NativeArray<byte> voxelGrid = ChunkManager.VoxelGridMap[key * ChunkManager.ChunkDimensions.x];
 		chunkManager.RequestMesh(chunk.terrainMesh, chunk.waterMesh, coord, true, false, voxelGrid);
 		chunk.UpdateCollider();
 	}

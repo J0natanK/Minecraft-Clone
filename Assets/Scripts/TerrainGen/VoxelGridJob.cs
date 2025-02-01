@@ -7,7 +7,7 @@ using Unity.Mathematics;
 struct VoxelGridJob : IJobParallelFor
 {
 	[NativeDisableParallelForRestriction]
-	public NativeArray<int> voxelValues;
+	public NativeArray<byte> voxelValues;
 
 	[ReadOnly] public int2 chunkDimensions;
 	[ReadOnly] public int2 offset;
@@ -65,7 +65,7 @@ struct VoxelGridJob : IJobParallelFor
 
 					for (int j = 0; j < stoneDepth; j++)
 					{
-						int block;
+						byte block;
 						if (isSand) block = Blocks.Sand;
 						else if (j == stoneDepth - 1) block = Blocks.Grass;
 						else block = Blocks.Dirt;
