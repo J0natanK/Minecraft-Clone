@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(ChunkGenerator))]
+[CustomEditor(typeof(ChunkManager))]
 
 public class MeshEditor : Editor
 {
 	public override void OnInspectorGUI()
 	{
-		ChunkGenerator meshGenerator = (ChunkGenerator)target;
+		ChunkManager meshGenerator = (ChunkManager)target;
 
 		DrawDefaultInspector();
 

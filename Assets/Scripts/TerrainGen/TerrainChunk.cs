@@ -15,9 +15,9 @@ public class TerrainChunk
 	bool hasCollider;
 	GameObject collider;
 
-	public TerrainChunk(Vector2Int coord, ChunkGenerator chunkGen)
+	public TerrainChunk(Vector2Int coord, ChunkManager chunkGen)
 	{
-		Vector2Int chunkDimensions = ChunkGenerator.ChunkDimensions;
+		Vector2Int chunkDimensions = ChunkManager.ChunkDimensions;
 
 		Vector2Int offset = coord * chunkDimensions.x;
 		gridCoords = offset;
@@ -35,9 +35,9 @@ public class TerrainChunk
 
 	public void UpdateChunk()
 	{
-		float viewerDstFromNearestEdge = bounds.SqrDistance(ChunkManager.ViewerPosition);
+		float viewerDstFromNearestEdge = bounds.SqrDistance(EndlessTerrain.ViewerPosition);
 
-		if (viewerDstFromNearestEdge < ChunkManager.ColliderRangeSqr && !hasCollider)
+		if (viewerDstFromNearestEdge < EndlessTerrain.ColliderRangeSqr && !hasCollider)
 		{
 			if (collider == null)
 			{
@@ -50,13 +50,13 @@ public class TerrainChunk
 
 			hasCollider = true;
 		}
-		if (hasCollider && viewerDstFromNearestEdge > ChunkManager.ColliderRangeSqr)
+		if (hasCollider && viewerDstFromNearestEdge > EndlessTerrain.ColliderRangeSqr)
 		{
 			collider.SetActive(false);
 			hasCollider = false;
 		}
 
-		bool visible = viewerDstFromNearestEdge <= ChunkManager.MaxViewDstSqr;
+		bool visible = viewerDstFromNearestEdge <= EndlessTerrain.MaxViewDstSqr;
 		if (visible) Render();
 	}
 

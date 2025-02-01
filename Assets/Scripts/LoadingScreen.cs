@@ -18,7 +18,7 @@ public class LoadingScreen : MonoBehaviour
 	}
 	void Update()
 	{
-		if (ChunkGenerator.LoadedTerrain && !enabled)
+		if (ChunkManager.LoadedTerrain && !enabled)
 		{
 			player.enabled = true;
 			loadingScreen.enabled = false;

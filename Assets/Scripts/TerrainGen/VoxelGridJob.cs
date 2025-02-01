@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 [BurstCompile]
-struct NoiseJob : IJobParallelFor
+struct VoxelGridJob : IJobParallelFor
 {
 	[NativeDisableParallelForRestriction]
 	public NativeArray<int> voxelValues;

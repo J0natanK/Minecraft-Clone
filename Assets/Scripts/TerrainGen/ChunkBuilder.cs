@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using UnityEngine.Rendering;
 using System.Diagnostics;
 
-class JobData
+class ChunkBuilder
 {
 	public Mesh landMesh, waterMesh;
 	public Vector2Int offset;
@@ -27,7 +27,7 @@ class JobData
 	public NativeList<int> waterTriangles;
 	public NativeList<float2> waterUvs;
 
-	public void CreateAndSchedule()
+	public void ScheduleBuild()
 	{
 		if (logTime)
 		{
@@ -42,26 +42,26 @@ class JobData
 		waterTriangles = new NativeList<int>(Allocator.Persistent);
 		waterUvs = new NativeList<float2>(Allocator.Persistent);
 
-		Vector2Int chunkDimensions = ChunkGenerator.ChunkDimensions;
+		Vector2Int chunkDimensions = ChunkManager.ChunkDimensions;
 
 		if (customVoxelGrid == default)
 		{
-			if (!ChunkGenerator.VoxelGridMap.ContainsKey(offset))
-				ChunkGenerator.VoxelGridMap.Add(offset, ChunkGenerator.Noise.GenerateVoxelGrid(offset));
+			if (!ChunkManager.VoxelGridMap.ContainsKey(offset))
+				ChunkManager.VoxelGridMap.Add(offset, ChunkManager.Noise.GenerateVoxelGrid(offset));
 		}
 		else
 		{
-			if (!ChunkGenerator.VoxelGridMap.ContainsKey(offset))
+			if (!ChunkManager.VoxelGridMap.ContainsKey(offset))
 			{
-				ChunkGenerator.VoxelGridMap.Add(offset, customVoxelGrid);
+				ChunkManager.VoxelGridMap.Add(offset, customVoxelGrid);
 			}
 			else
 			{
-				ChunkGenerator.VoxelGridMap[offset] = customVoxelGrid;
+				ChunkManager.VoxelGridMap[offset] = customVoxelGrid;
 			}
 		}
 
-		AddNeighboringChunkData(offset);
+		AddNeighboringChunks(offset);
 
 		MeshBuildJob job = new MeshBuildJob
 		{
@@ -73,15 +73,15 @@ class JobData
 			waterTriangles = waterTriangles,
 			waterUvs = waterUvs,
 
-			thisVoxelGrid = ChunkGenerator.VoxelGridMap[offset],
-			rightVoxelGrid = ChunkGenerator.VoxelGridMap[offset + new Vector2Int(chunkDimensions.x, 0)],
-			leftVoxelGrid = ChunkGenerator.VoxelGridMap[offset + new Vector2Int(-chunkDimensions.x, 0)],
-			frontVoxelGrid = ChunkGenerator.VoxelGridMap[offset + new Vector2Int(0, chunkDimensions.x)],
-			backVoxelGrid = ChunkGenerator.VoxelGridMap[offset + new Vector2Int(0, -chunkDimensions.x)],
+			thisVoxelGrid = ChunkManager.VoxelGridMap[offset],
+			rightVoxelGrid = ChunkManager.VoxelGridMap[offset + new Vector2Int(chunkDimensions.x, 0)],
+			leftVoxelGrid = ChunkManager.VoxelGridMap[offset + new Vector2Int(-chunkDimensions.x, 0)],
+			frontVoxelGrid = ChunkManager.VoxelGridMap[offset + new Vector2Int(0, chunkDimensions.x)],
+			backVoxelGrid = ChunkManager.VoxelGridMap[offset + new Vector2Int(0, -chunkDimensions.x)],
 
-			faceDirections = ChunkGenerator.FaceDirections,
-			uvCordinates = ChunkGenerator.UvCoordinates,
-			faceVertices = ChunkGenerator.FaceVertices,
+			faceDirections = ChunkManager.FaceDirections,
+			uvCordinates = ChunkManager.UvCoordinates,
+			faceVertices = ChunkManager.FaceVertices,
 			chunkDimensions = new int2(chunkDimensions.x, chunkDimensions.y),
 		};
 
@@ -89,7 +89,7 @@ class JobData
 		scheduled = true;
 	}
 
-	public void Complete()
+	public void CompleteBuild()
 	{
 		handle.Complete();
 
@@ -150,22 +150,22 @@ class JobData
 		}
 	}
 
-	private void AddNeighboringChunkData(Vector2Int offset)
+	private void AddNeighboringChunks(Vector2Int offset)
 	{
-		Vector2Int chunkDimensions = ChunkGenerator.ChunkDimensions;
-		Noise noise = ChunkGenerator.Noise;
+		Vector2Int chunkDimensions = ChunkManager.ChunkDimensions;
+		VoxelGen noise = ChunkManager.Noise;
 
-		if (!ChunkGenerator.VoxelGridMap.ContainsKey(offset + new Vector2Int(chunkDimensions.x, 0)))
-			ChunkGenerator.VoxelGridMap.Add(offset + new Vector2Int(chunkDimensions.x, 0), noise.GenerateVoxelGrid(offset + Vector2Int.right * chunkDimensions.x));
+		if (!ChunkManager.VoxelGridMap.ContainsKey(offset + new Vector2Int(chunkDimensions.x, 0)))
+			ChunkManager.VoxelGridMap.Add(offset + new Vector2Int(chunkDimensions.x, 0), noise.GenerateVoxelGrid(offset + Vector2Int.right * chunkDimensions.x));
 
-		if (!ChunkGenerator.VoxelGridMap.ContainsKey(offset + new Vector2Int(-chunkDimensions.x, 0)))
-			ChunkGenerator.VoxelGridMap.Add(offset + new Vector2Int(-chunkDimensions.x, 0), noise.GenerateVoxelGrid(offset + Vector2Int.left * chunkDimensions.x));
+		if (!ChunkManager.VoxelGridMap.ContainsKey(offset + new Vector2Int(-chunkDimensions.x, 0)))
+			ChunkManager.VoxelGridMap.Add(offset + new Vector2Int(-chunkDimensions.x, 0), noise.GenerateVoxelGrid(offset + Vector2Int.left * chunkDimensions.x));
 
-		if (!ChunkGenerator.VoxelGridMap.ContainsKey(offset + new Vector2Int(0, chunkDimensions.x)))
-			ChunkGenerator.VoxelGridMap.Add(offset + new Vector2Int(0, chunkDimensions.x), noise.GenerateVoxelGrid(offset + Vector2Int.up * chunkDimensions.x));
+		if (!ChunkManager.VoxelGridMap.ContainsKey(offset + new Vector2Int(0, chunkDimensions.x)))
+			ChunkManager.VoxelGridMap.Add(offset + new Vector2Int(0, chunkDimensions.x), noise.GenerateVoxelGrid(offset + Vector2Int.up * chunkDimensions.x));
 
-		if (!ChunkGenerator.VoxelGridMap.ContainsKey(offset + new Vector2Int(0, -chunkDimensions.x)))
-			ChunkGenerator.VoxelGridMap.Add(offset + new Vector2Int(0, -chunkDimensions.x), noise.GenerateVoxelGrid(offset + Vector2Int.down * chunkDimensions.x));
+		if (!ChunkManager.VoxelGridMap.ContainsKey(offset + new Vector2Int(0, -chunkDimensions.x)))
+			ChunkManager.VoxelGridMap.Add(offset + new Vector2Int(0, -chunkDimensions.x), noise.GenerateVoxelGrid(offset + Vector2Int.down * chunkDimensions.x));
 	}
 }
 

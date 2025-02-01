@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using UnityEngine.Jobs;
 using Unity.Jobs;
 
-public class Noise
+public class VoxelGen
 {
 	TerrainProperties properties;
 	NativeArray<float> curve;
@@ -12,7 +12,7 @@ public class Noise
 	NativeArray<float> frequencies;
 	NativeArray<float> amplitudes;
 
-	public Noise(TerrainProperties properties)
+	public VoxelGen(TerrainProperties properties)
 	{
 		this.properties = properties;
 		frequencies = new NativeArray<float>(properties.numOctaves, Allocator.Persistent);
@@ -35,13 +35,13 @@ public class Noise
 
 	public NativeArray<int> GenerateVoxelGrid(Vector2Int offset)
 	{
-		int size = ChunkGenerator.ChunkDimensions.x * ChunkGenerator.ChunkDimensions.y * ChunkGenerator.ChunkDimensions.x;
+		int size = ChunkManager.ChunkDimensions.x * ChunkManager.ChunkDimensions.y * ChunkManager.ChunkDimensions.x;
 		NativeArray<int> voxelValues = new(size, Allocator.Persistent);
 
-		NoiseJob job = new()
+		VoxelGridJob job = new()
 		{
 			voxelValues = voxelValues,
-			chunkDimensions = new int2(ChunkGenerator.ChunkDimensions.x, ChunkGenerator.ChunkDimensions.y),
+			chunkDimensions = new int2(ChunkManager.ChunkDimensions.x, ChunkManager.ChunkDimensions.y),
 			offset = new int2(offset.x, offset.y),
 			curve = curve,
 			frequencies = frequencies,
@@ -63,7 +63,7 @@ public class Noise
 
 		};
 
-		job.Schedule(ChunkGenerator.ChunkDimensions.x * ChunkGenerator.ChunkDimensions.x, 1).Complete();
+		job.Schedule(ChunkManager.ChunkDimensions.x * ChunkManager.ChunkDimensions.x, 1).Complete();
 
 		return voxelValues;
 	}
