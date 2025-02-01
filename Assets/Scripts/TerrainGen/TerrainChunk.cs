@@ -31,6 +31,8 @@ public class TerrainChunk
 
 		terrainParams = new RenderParams(chunkGen.terrainMaterial);
 		waterParams = new RenderParams(chunkGen.waterMaterial);
+		terrainParams.receiveShadows = true;
+		terrainParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
 	}
 
 	public void UpdateChunk()
