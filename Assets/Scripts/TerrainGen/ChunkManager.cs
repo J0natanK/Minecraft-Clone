@@ -13,7 +13,7 @@ public class ChunkManager : MonoBehaviour
 	[Header("Performance")]
 	public int maxJobsPerFrame;
 
-	public static readonly Vector2Int ChunkDimensions = new Vector2Int(32, 300);
+	public static readonly Vector2Int ChunkDimensions = new Vector2Int(32, 192);
 	public static VoxelGen VoxelGen;
 	public static bool LoadedTerrain;
 	public static NativeArray<int3> FaceVertices;
@@ -21,8 +21,8 @@ public class ChunkManager : MonoBehaviour
 	public static NativeArray<float2> UvCoordinates;
 	public static NativeHashMap<Vector2Int, NativeArray<byte>> VoxelGridMap;
 
-	List<ChunkBuilder> jobList;
-	List<ChunkBuilder> jobQueue;
+	List<ChunkBuilder> chunkList;
+	List<ChunkBuilder> chunkQueue;
 
 	void Start()
 	{
@@ -31,13 +31,13 @@ public class ChunkManager : MonoBehaviour
 
 	void Update()
 	{
-		for (int i = 0; i < jobList.Count; i++)
+		for (int i = 0; i < chunkList.Count; i++)
 		{
-			ChunkBuilder jobData = jobList[i];
+			ChunkBuilder jobData = chunkList[i];
 			if (jobData.scheduled && jobData.handle.IsCompleted)
 			{
 				jobData.CompleteBuild();
-				jobList.RemoveAt(i);
+				chunkList.RemoveAt(i);
 			}
 			if (!jobData.scheduled)
 			{
@@ -45,22 +45,22 @@ public class ChunkManager : MonoBehaviour
 			}
 		}
 
-		if (jobList.Count < maxJobsPerFrame && jobQueue.Count > 0)
+		if (chunkList.Count < maxJobsPerFrame && chunkQueue.Count > 0)
 		{
-			int length = Mathf.Min(maxJobsPerFrame, jobQueue.Count);
+			int length = Mathf.Min(maxJobsPerFrame, chunkQueue.Count);
 
 			for (int i = 0; i < length; i++)
 			{
-				jobList.Add(jobQueue[i]);
+				chunkList.Add(chunkQueue[i]);
 			}
 
-			jobQueue.RemoveRange(0, length);
+			chunkQueue.RemoveRange(0, length);
 		}
 	}
 
 	void LateUpdate()
 	{
-		if (jobQueue.Count == 0)
+		if (chunkQueue.Count == 0)
 		{
 			LoadedTerrain = true;
 		}
@@ -117,7 +117,7 @@ public class ChunkManager : MonoBehaviour
 		}
 		else
 		{
-			jobQueue.Add(new ChunkBuilder
+			chunkQueue.Add(new ChunkBuilder
 			{
 				landMesh = landMesh,
 				waterMesh = waterMesh,
@@ -131,8 +131,8 @@ public class ChunkManager : MonoBehaviour
 	public void Initialize()
 	{
 		VoxelGridMap = new NativeHashMap<Vector2Int, NativeArray<byte>>(1024, Allocator.Persistent);
-		jobList = new();
-		jobQueue = new();
+		chunkList = new();
+		chunkQueue = new();
 
 		VoxelGen = new VoxelGen(properties);
 
@@ -195,7 +195,7 @@ public class ChunkManager : MonoBehaviour
 
 	public void Dispose()
 	{
-		foreach (var job in jobList)
+		foreach (var job in chunkList)
 		{
 			if (job.scheduled)
 			{

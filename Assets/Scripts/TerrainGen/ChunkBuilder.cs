@@ -168,4 +168,3 @@ class ChunkBuilder
 			ChunkManager.VoxelGridMap.Add(offset + new Vector2Int(0, -chunkDimensions.x), noise.GenerateVoxelGrid(offset + Vector2Int.down * chunkDimensions.x));
 	}
 }
-
