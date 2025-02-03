@@ -970,6 +970,7 @@ GameObject:
   - component: {fileID: 1731279923}
   - component: {fileID: 1731279926}
   - component: {fileID: 1731279927}
+  - component: {fileID: 1731279928}
   m_Layer: 0
   m_Name: TerrainMain
   m_TagString: Untagged
@@ -1025,6 +1026,19 @@ MonoBehaviour:
   lifetimeSeconds: 2
   viewer: {fileID: 1909131461}
   chunkManager: {fileID: 1731279926}
+--- !u!114 &1731279928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1731279921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b37c83a096d28c74d97c599c827ec681, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxVoxelGridMapSizeMB: 300
 --- !u!1 &1884179212
 GameObject:
   m_ObjectHideFlags: 0

@@ -28,15 +28,6 @@ public class ChunkManager : MonoBehaviour
 	void Start()
 	{
 		Initialize();
-
-		// for (int y = 0; y < 30; y++)
-		// {
-		// 	for (int x = 0; x < 30; x++)
-		// 	{
-		// 		Vector2Int offset = new Vector2Int(x * ChunkDimensions.x, y * ChunkDimensions.y);
-		// 		RequestMesh(new Mesh(), new Mesh(), offset);
-		// 	}
-		// }
 	}
 
 	void Update()
