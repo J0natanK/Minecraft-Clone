@@ -3,6 +3,7 @@ using Unity.Collections;
 using UnityEngine;
 using Unity.Mathematics;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 public class ChunkManager : MonoBehaviour
 {
@@ -27,6 +28,15 @@ public class ChunkManager : MonoBehaviour
 	void Start()
 	{
 		Initialize();
+
+		// for (int y = 0; y < 30; y++)
+		// {
+		// 	for (int x = 0; x < 30; x++)
+		// 	{
+		// 		Vector2Int offset = new Vector2Int(x * ChunkDimensions.x, y * ChunkDimensions.y);
+		// 		RequestMesh(new Mesh(), new Mesh(), offset);
+		// 	}
+		// }
 	}
 
 	void Update()
@@ -55,6 +65,11 @@ public class ChunkManager : MonoBehaviour
 			}
 
 			chunkQueue.RemoveRange(0, length);
+		}
+
+		if (Input.GetKeyDown(KeyCode.Space))
+		{
+			GameObject.Find("Text").GetComponent<Text>().text = VoxelGridMap.Count.ToString();
 		}
 	}
 

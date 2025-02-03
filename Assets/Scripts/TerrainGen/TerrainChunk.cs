@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 public class TerrainChunk
@@ -5,7 +6,10 @@ public class TerrainChunk
 	public Mesh terrainMesh;
 	public Mesh waterMesh;
 	public Vector3 position;
-	public Vector2Int gridCoords;
+	public Vector2Int voxelGridCoords;
+	public float secSinceVisible;
+	public bool requestingMesh;
+	public bool destroyMesh;
 
 	RenderParams terrainParams;
 	RenderParams waterParams;
@@ -15,24 +19,24 @@ public class TerrainChunk
 	bool hasCollider;
 	GameObject collider;
 
-	public TerrainChunk(Vector2Int coord, ChunkManager chunkGen)
+	ChunkManager chunkManager;
+
+	public TerrainChunk(Vector2Int coord, ChunkManager chunkManager)
 	{
 		Vector2Int chunkDimensions = ChunkManager.ChunkDimensions;
 
 		Vector2Int offset = coord * chunkDimensions.x;
-		gridCoords = offset;
+		voxelGridCoords = offset;
 		bounds = new Bounds(new Vector2(offset.x, offset.y), Vector2.one * chunkDimensions.x);
-
-		terrainMesh = new();
-		waterMesh = new();
-		chunkGen.RequestMesh(terrainMesh, waterMesh, offset);
 
 		position = new Vector3(offset.x - (chunkDimensions.x / 2), 0, offset.y - (chunkDimensions.x / 2));
 
-		terrainParams = new RenderParams(chunkGen.terrainMaterial);
-		waterParams = new RenderParams(chunkGen.waterMaterial);
+		terrainParams = new RenderParams(chunkManager.terrainMaterial);
+		waterParams = new RenderParams(chunkManager.waterMaterial);
 		terrainParams.receiveShadows = true;
 		terrainParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+
+		this.chunkManager = chunkManager;
 	}
 
 	public void UpdateChunk()
@@ -59,7 +63,18 @@ public class TerrainChunk
 		}
 
 		bool visible = viewerDstFromNearestEdge <= EndlessTerrain.MaxViewDstSqr;
-		if (visible) Render();
+		if (visible)
+		{
+			destroyMesh = false;
+			Render();
+			secSinceVisible = 0;
+		}
+		else
+		{
+			destroyMesh = true;
+		}
+
+		secSinceVisible += Time.deltaTime;
 	}
 
 	public void UpdateCollider()
@@ -69,13 +84,28 @@ public class TerrainChunk
 
 	void Render()
 	{
-		if (terrainMesh != null)
+		// if (terrainMesh == null && !requestingMesh)
+		// {
+		// 	terrainMesh = new();
+		// 	waterMesh = new();
+
+		// 	chunkManager.RequestMesh(terrainMesh, waterMesh, voxelGridCoords);
+		// 	requestingMesh = true;
+		// }
+
+		if (terrainMesh == null && !requestingMesh)
 		{
-			Graphics.RenderMesh(terrainParams, terrainMesh, 0, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));
+			terrainMesh = new();
+			waterMesh = new();
+
+			chunkManager.RequestMesh(terrainMesh, waterMesh, voxelGridCoords);
+			requestingMesh = true;
 		}
 
-		if (waterMesh != null)
+		if (terrainMesh != null)
 		{
+			requestingMesh = false;
+			Graphics.RenderMesh(terrainParams, terrainMesh, 0, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));
 			Graphics.RenderMesh(waterParams, waterMesh, 0, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));
 		}
 	}

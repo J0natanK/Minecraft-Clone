@@ -6,6 +6,7 @@ public class EndlessTerrain : MonoBehaviour
 {
 	public float maxViewDst;
 	public float colliderRange;
+	public float lifetimeSeconds;
 	public Transform viewer;
 	public ChunkManager chunkManager;
 
@@ -27,11 +28,14 @@ public class EndlessTerrain : MonoBehaviour
 	{
 		ViewerPosition = new Vector2(viewer.position.x, viewer.position.z);
 		UpdateVisibleChunks();
+		Resources.UnloadUnusedAssets();
 
 	}
 
 	void UpdateVisibleChunks()
 	{
+		int activeMeshes = 0;
+
 		int currentChunkCoordX = (int)Mathf.Round(ViewerPosition.x / ChunkManager.ChunkDimensions.x);
 		int currentChunkCoordY = (int)Mathf.Round(ViewerPosition.y / ChunkManager.ChunkDimensions.x);
 
@@ -45,6 +49,13 @@ public class EndlessTerrain : MonoBehaviour
 				{
 					TerrainChunk viewedChunk = ChunkDictionary[viewedChunkCoord];
 					viewedChunk.UpdateChunk();
+
+					if (viewedChunk.destroyMesh && viewedChunk.terrainMesh != null && !viewedChunk.requestingMesh)
+					{
+						Destroy(viewedChunk.terrainMesh);
+						Destroy(viewedChunk.waterMesh);
+					}
+					if (viewedChunk.terrainMesh != null) activeMeshes++;
 				}
 				else
 				{
@@ -52,5 +63,7 @@ public class EndlessTerrain : MonoBehaviour
 				}
 			}
 		}
+
+		//Debug.Log(activeMeshes);
 	}
 }

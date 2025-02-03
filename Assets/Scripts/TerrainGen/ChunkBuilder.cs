@@ -97,16 +97,19 @@ class ChunkBuilder
 		NativeArray<int> triangleArray = triangles.AsArray();
 		NativeArray<Vector2> uvArray = uvs.AsArray().Reinterpret<Vector2>();
 
-		// Assign data to mesh
-		landMesh.SetVertexBufferParams(vertexArray.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
-		landMesh.SetVertexBufferData(vertexArray, 0, 0, vertexArray.Length, 0, MeshUpdateFlags.Default);
-		landMesh.SetIndexBufferParams(triangleArray.Length, IndexFormat.UInt32);
-		landMesh.SetIndexBufferData(triangleArray, 0, 0, triangleArray.Length, MeshUpdateFlags.Default);
-		landMesh.SetSubMesh(0, new SubMeshDescriptor(0, triangleArray.Length), MeshUpdateFlags.Default);
-		landMesh.SetUVs(0, uvArray);
+		if (landMesh != null)
+		{
+			// Assign data to mesh
+			landMesh.SetVertexBufferParams(vertexArray.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
+			landMesh.SetVertexBufferData(vertexArray, 0, 0, vertexArray.Length, 0, MeshUpdateFlags.Default);
+			landMesh.SetIndexBufferParams(triangleArray.Length, IndexFormat.UInt32);
+			landMesh.SetIndexBufferData(triangleArray, 0, 0, triangleArray.Length, MeshUpdateFlags.Default);
+			landMesh.SetSubMesh(0, new SubMeshDescriptor(0, triangleArray.Length), MeshUpdateFlags.Default);
+			landMesh.SetUVs(0, uvArray);
 
-		landMesh.RecalculateBounds();
-		landMesh.RecalculateNormals();
+			landMesh.RecalculateBounds();
+			landMesh.RecalculateNormals();
+		}
 
 		//Water mesh
 		if (waterVertices.Length > 0)
@@ -115,16 +118,19 @@ class ChunkBuilder
 			NativeArray<int> wTriangleArray = waterTriangles.AsArray();
 			NativeArray<Vector2> wUvArray = waterUvs.AsArray().Reinterpret<Vector2>();
 
-			// Assign data to mesh
-			waterMesh.SetVertexBufferParams(wVertexArray.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
-			waterMesh.SetVertexBufferData(wVertexArray, 0, 0, wVertexArray.Length, 0, MeshUpdateFlags.Default);
-			waterMesh.SetIndexBufferParams(wTriangleArray.Length, IndexFormat.UInt32);
-			waterMesh.SetIndexBufferData(wTriangleArray, 0, 0, wTriangleArray.Length, MeshUpdateFlags.Default);
-			waterMesh.SetSubMesh(0, new SubMeshDescriptor(0, wTriangleArray.Length), MeshUpdateFlags.Default);
-			waterMesh.SetUVs(0, wUvArray);
+			if (waterMesh != null)
+			{
+				// Assign data to mesh
+				waterMesh.SetVertexBufferParams(wVertexArray.Length, new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3));
+				waterMesh.SetVertexBufferData(wVertexArray, 0, 0, wVertexArray.Length, 0, MeshUpdateFlags.Default);
+				waterMesh.SetIndexBufferParams(wTriangleArray.Length, IndexFormat.UInt32);
+				waterMesh.SetIndexBufferData(wTriangleArray, 0, 0, wTriangleArray.Length, MeshUpdateFlags.Default);
+				waterMesh.SetSubMesh(0, new SubMeshDescriptor(0, wTriangleArray.Length), MeshUpdateFlags.Default);
+				waterMesh.SetUVs(0, wUvArray);
 
-			waterMesh.RecalculateBounds();
-			waterMesh.RecalculateNormals();
+				waterMesh.RecalculateBounds();
+				waterMesh.RecalculateNormals();
+			}
 
 			wVertexArray.Dispose();
 			wTriangleArray.Dispose();
