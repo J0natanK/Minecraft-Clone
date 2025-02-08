@@ -32,7 +32,7 @@ public class BlockBreakingAndPlacing : MonoBehaviour
 		);
 
 		Vector2Int chunkKey = new Vector2Int(chunkCoord.x / ChunkManager.ChunkDimensions.x, chunkCoord.y / ChunkManager.ChunkDimensions.x);
-		if (!EndlessTerrain.ChunkDictionary.TryGetValue(chunkKey, out TerrainChunk chunk))
+		if (!ChunkManager.ChunkMap.TryGetValue(chunkKey, out TerrainChunk chunk))
 		{
 			Debug.LogWarning("Chunk doesnt exist!");
 			return;
@@ -53,8 +53,8 @@ public class BlockBreakingAndPlacing : MonoBehaviour
 
 		voxelGrid[Utils.VoxelIndex(x, y, z)] = placeBlock ? Blocks.Grass : Blocks.Air;
 
-		chunkManager.RequestMesh(chunk.terrainMesh, chunk.waterMesh, chunkCoord, true, false, voxelGrid);
-		chunk.UpdateCollider();
+		chunkManager.RequestChunkMesh(chunk.terrainMesh, chunk.waterMesh, chunkCoord, voxelGrid, true);
+		chunk.UpdateColliderMesh();
 
 		if (x == 0)
 			UpdateChunk(chunkKey + Vector2Int.left, chunkCoord + new Vector2Int(-ChunkManager.ChunkDimensions.x, 0));
@@ -68,9 +68,9 @@ public class BlockBreakingAndPlacing : MonoBehaviour
 
 	void UpdateChunk(Vector2Int key, Vector2Int coord)
 	{
-		TerrainChunk chunk = EndlessTerrain.ChunkDictionary[key];
+		TerrainChunk chunk = ChunkManager.ChunkMap[key];
 		NativeArray<byte> voxelGrid = ChunkManager.VoxelGridMap[key * ChunkManager.ChunkDimensions.x];
-		chunkManager.RequestMesh(chunk.terrainMesh, chunk.waterMesh, coord, true, false, voxelGrid);
-		chunk.UpdateCollider();
+		chunkManager.RequestChunkMesh(chunk.terrainMesh, chunk.waterMesh, coord, voxelGrid, true);
+		chunk.UpdateColliderMesh();
 	}
 }

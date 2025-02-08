@@ -1,120 +1,117 @@
+using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
 
 public class TerrainChunk
 {
+	public bool visible;
+	public bool requestingMesh;
+
 	public Mesh terrainMesh;
 	public Mesh waterMesh;
-	public Vector3 position;
-	public Vector2Int voxelGridCoords;
-	public float secSinceVisible;
-	public bool requestingMesh;
-	public bool destroyMesh;
 
 	RenderParams terrainParams;
 	RenderParams waterParams;
 
-	Bounds bounds;
+	Vector3 meshPosition;
+	Vector2Int chunkPosition;
 
-	bool hasCollider;
-	GameObject collider;
+	MeshCollider collider;
+	GameObject colliderObj;
+
+	Bounds bounds;
 
 	ChunkManager chunkManager;
 
-	public TerrainChunk(Vector2Int coord, ChunkManager chunkManager)
+	public TerrainChunk(Vector2Int position, Mesh terrainMesh, Mesh waterMesh, ChunkManager chunkManager)
 	{
-		Vector2Int chunkDimensions = ChunkManager.ChunkDimensions;
+		this.terrainMesh = terrainMesh;
+		this.waterMesh = waterMesh;
+		this.chunkManager = chunkManager;
 
-		Vector2Int offset = coord * chunkDimensions.x;
-		voxelGridCoords = offset;
-		bounds = new Bounds(new Vector2(offset.x, offset.y), Vector2.one * chunkDimensions.x);
+		bounds = new Bounds(new Vector2(position.x, position.y), Vector2.one * ChunkManager.ChunkDimensions.x);
 
-		position = new Vector3(offset.x - (chunkDimensions.x / 2), 0, offset.y - (chunkDimensions.x / 2));
+		meshPosition = new Vector3(position.x - (ChunkManager.ChunkDimensions.x / 2), 0, position.y - (ChunkManager.ChunkDimensions.x / 2));
+		chunkPosition = position;
 
 		terrainParams = new RenderParams(chunkManager.terrainMaterial);
 		waterParams = new RenderParams(chunkManager.waterMaterial);
 		terrainParams.receiveShadows = true;
 		terrainParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-
-		this.chunkManager = chunkManager;
 	}
 
-	public void UpdateChunk()
+	public void UpdateVisibilty()
 	{
-		float viewerDstFromNearestEdge = bounds.SqrDistance(EndlessTerrain.ViewerPosition);
+		float playerDstSqr = bounds.SqrDistance(EndlessTerrain.ViewerPosition);
+		visible = playerDstSqr <= EndlessTerrain.MaxViewDstSqr;
 
-		if (viewerDstFromNearestEdge < EndlessTerrain.ColliderRangeSqr && !hasCollider)
-		{
-			if (collider == null)
-			{
-				InitCollider();
-			}
-			else
-			{
-				collider.SetActive(true);
-			}
+		if (visible) Render();
 
-			hasCollider = true;
-		}
-		if (hasCollider && viewerDstFromNearestEdge > EndlessTerrain.ColliderRangeSqr)
-		{
-			collider.SetActive(false);
-			hasCollider = false;
-		}
-
-		bool visible = viewerDstFromNearestEdge <= EndlessTerrain.MaxViewDstSqr;
-		if (visible)
-		{
-			destroyMesh = false;
-			Render();
-			secSinceVisible = 0;
-		}
-		else
-		{
-			destroyMesh = true;
-		}
-
-		secSinceVisible += Time.deltaTime;
+		UpdateCollider(playerDstSqr);
 	}
 
-	public void UpdateCollider()
+	public void UpdateColliderMesh()
 	{
-		collider.GetComponent<MeshCollider>().sharedMesh = terrainMesh;
+		collider.sharedMesh = terrainMesh;
 	}
 
 	void Render()
 	{
-		// if (terrainMesh == null && !requestingMesh)
-		// {
-		// 	terrainMesh = new();
-		// 	waterMesh = new();
-
-		// 	chunkManager.RequestMesh(terrainMesh, waterMesh, voxelGridCoords);
-		// 	requestingMesh = true;
-		// }
-
 		if (terrainMesh == null && !requestingMesh)
 		{
 			terrainMesh = new();
 			waterMesh = new();
 
-			chunkManager.RequestMesh(terrainMesh, waterMesh, voxelGridCoords);
+			chunkManager.RequestChunkMesh(terrainMesh, waterMesh, chunkPosition);
 			requestingMesh = true;
 		}
 
 		if (terrainMesh != null)
 		{
 			requestingMesh = false;
-			Graphics.RenderMesh(terrainParams, terrainMesh, 0, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));
-			Graphics.RenderMesh(waterParams, waterMesh, 0, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one));
+			Graphics.RenderMesh(terrainParams, terrainMesh, 0, Matrix4x4.TRS(meshPosition, Quaternion.identity, Vector3.one));
+		}
+
+		if (waterMesh != null)
+		{
+			requestingMesh = false;
+			Graphics.RenderMesh(waterParams, waterMesh, 0, Matrix4x4.TRS(meshPosition, Quaternion.identity, Vector3.one));
+		}
+	}
+
+
+	void UpdateCollider(float playerDstSqr)
+	{
+		bool activeCollider = playerDstSqr <= EndlessTerrain.ColliderRangeSqr;
+
+		if (activeCollider && colliderObj == null)
+		{
+			InitCollider();
+		}
+
+		if (colliderObj == null)
+		{
+			return;
+		}
+
+		if (colliderObj.activeSelf != activeCollider)
+		{
+			colliderObj.SetActive(activeCollider);
+		}
+
+		if (activeCollider && collider.sharedMesh != terrainMesh)
+		{
+			collider.sharedMesh = terrainMesh;
 		}
 	}
 
 	void InitCollider()
 	{
-		collider = new GameObject("Collider");
-		collider.tag = "Chunk";
-		collider.transform.position = position;
-		collider.AddComponent<MeshCollider>().sharedMesh = terrainMesh;
+		colliderObj = new GameObject("TerrainCollider");
+		colliderObj.tag = "Chunk";
+		colliderObj.transform.parent = chunkManager.gameObject.transform;
+		colliderObj.transform.position = meshPosition;
+		collider = colliderObj.AddComponent<MeshCollider>();
+		colliderObj.SetActive(false);
 	}
 }

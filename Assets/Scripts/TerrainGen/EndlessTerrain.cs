@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Runtime.InteropServices;
+using UnityEngine.Accessibility;
 
 public class EndlessTerrain : MonoBehaviour
 {
@@ -13,7 +14,6 @@ public class EndlessTerrain : MonoBehaviour
 	public static Vector2 ViewerPosition;
 	public static float MaxViewDstSqr;
 	public static float ColliderRangeSqr;
-	public static Dictionary<Vector2, TerrainChunk> ChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
 
 	int chunksVisibleInViewDst;
 
@@ -28,14 +28,10 @@ public class EndlessTerrain : MonoBehaviour
 	{
 		ViewerPosition = new Vector2(viewer.position.x, viewer.position.z);
 		UpdateVisibleChunks();
-		Resources.UnloadUnusedAssets();
-
 	}
 
 	void UpdateVisibleChunks()
 	{
-		int activeMeshes = 0;
-
 		int currentChunkCoordX = (int)Mathf.Round(ViewerPosition.x / ChunkManager.ChunkDimensions.x);
 		int currentChunkCoordY = (int)Mathf.Round(ViewerPosition.y / ChunkManager.ChunkDimensions.x);
 
@@ -45,25 +41,25 @@ public class EndlessTerrain : MonoBehaviour
 			{
 				Vector2Int viewedChunkCoord = new Vector2Int(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
 
-				if (ChunkDictionary.ContainsKey(viewedChunkCoord))
+				if (ChunkManager.ChunkMap.ContainsKey(viewedChunkCoord))
 				{
-					TerrainChunk viewedChunk = ChunkDictionary[viewedChunkCoord];
-					viewedChunk.UpdateChunk();
+					TerrainChunk viewedChunk = ChunkManager.ChunkMap[viewedChunkCoord];
+					viewedChunk.UpdateVisibilty();
 
-					if (viewedChunk.destroyMesh && viewedChunk.terrainMesh != null && !viewedChunk.requestingMesh)
+					if (!viewedChunk.visible && !viewedChunk.requestingMesh)
 					{
-						Destroy(viewedChunk.terrainMesh);
-						Destroy(viewedChunk.waterMesh);
+						if (viewedChunk.terrainMesh != null)
+							Destroy(viewedChunk.terrainMesh);
+						if (viewedChunk.waterMesh != null)
+							Destroy(viewedChunk.waterMesh);
 					}
-					if (viewedChunk.terrainMesh != null) activeMeshes++;
 				}
 				else
 				{
-					ChunkDictionary.Add(viewedChunkCoord, new TerrainChunk(viewedChunkCoord, chunkManager));
+					Vector2Int chunkPosition = viewedChunkCoord * ChunkManager.ChunkDimensions.x;
+					ChunkManager.ChunkMap.Add(viewedChunkCoord, chunkManager.CreateChunk(chunkPosition));
 				}
 			}
 		}
-
-		//Debug.Log(activeMeshes);
 	}
 }

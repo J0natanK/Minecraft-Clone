@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
 using Unity.Mathematics;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
 
 public class ChunkManager : MonoBehaviour
 {
@@ -17,13 +15,93 @@ public class ChunkManager : MonoBehaviour
 	public static readonly Vector2Int ChunkDimensions = new Vector2Int(32, 192);
 	public static VoxelGen VoxelGen;
 	public static bool LoadedTerrain;
+
 	public static NativeArray<int3> FaceVertices;
 	public static NativeArray<int3> FaceDirections;
 	public static NativeArray<float2> UvCoordinates;
-	public static NativeHashMap<Vector2Int, NativeArray<byte>> VoxelGridMap;
 
-	List<ChunkBuilder> chunkList;
-	List<ChunkBuilder> chunkQueue;
+	public static Dictionary<Vector2Int, TerrainChunk> ChunkMap;
+	public static Dictionary<Vector2Int, NativeArray<byte>> VoxelGridMap;
+
+	List<ChunkBuilder> meshBuildList;
+	List<ChunkBuilder> meshBuildQueue;
+
+	public TerrainChunk CreateChunk(Vector2Int position, NativeArray<byte> customVoxelGrid = default, bool instantMesh = false)
+	{
+		Mesh terrainMesh = new();
+		Mesh waterMesh = new();
+
+		RequestChunkMesh(terrainMesh, waterMesh, position, customVoxelGrid, instantMesh);
+
+		TerrainChunk chunk = new TerrainChunk(position, terrainMesh, waterMesh, this);
+
+		return chunk;
+	}
+
+	public void RequestChunkMesh(Mesh terrainMesh, Mesh waterMesh, Vector2Int position, NativeArray<byte> customVoxelGrid = default, bool instantCompletion = false)
+	{
+		if (terrainMesh == null)
+		{
+			terrainMesh = new();
+		}
+		if (waterMesh == null)
+		{
+			waterMesh = new();
+		}
+		ChunkBuilder meshBuilder = new(terrainMesh, waterMesh, position, customVoxelGrid);
+
+		if (instantCompletion)
+		{
+			meshBuildList.Add(meshBuilder);
+			ScheduleMeshBuild(meshBuildList.Count - 1);
+			CompleteMeshBuild(meshBuildList.Count - 1);
+		}
+		else
+		{
+			meshBuildQueue.Add(meshBuilder);
+		}
+	}
+
+	void AddVoxelGrids(ChunkBuilder builder)
+	{
+		Vector2Int position = builder.position;
+
+		if (builder.customVoxelGrid == default)
+		{
+			if (!VoxelGridMap.ContainsKey(position))
+				VoxelGridMap.Add(position, VoxelGen.GenerateVoxelGrid(position));
+		}
+		else
+		{
+			if (VoxelGridMap.ContainsKey(position))
+				VoxelGridMap[position] = builder.customVoxelGrid;
+		}
+
+		Vector2Int right = position + new Vector2Int(ChunkDimensions.x, 0);
+		if (!VoxelGridMap.ContainsKey(right))
+			VoxelGridMap.Add(right, VoxelGen.GenerateVoxelGrid(right));
+
+		Vector2Int left = position - new Vector2Int(ChunkDimensions.x, 0);
+		if (!VoxelGridMap.ContainsKey(left))
+			VoxelGridMap.Add(left, VoxelGen.GenerateVoxelGrid(left));
+
+		Vector2Int front = position + new Vector2Int(0, ChunkDimensions.x);
+		if (!VoxelGridMap.ContainsKey(front))
+			VoxelGridMap.Add(front, VoxelGen.GenerateVoxelGrid(front));
+
+		Vector2Int back = position - new Vector2Int(0, ChunkDimensions.x);
+		if (!VoxelGridMap.ContainsKey(back))
+			VoxelGridMap.Add(back, VoxelGen.GenerateVoxelGrid(back));
+
+		builder.AssignVoxelGrids(
+			VoxelGridMap[position],
+			VoxelGridMap[right],
+			VoxelGridMap[left],
+			VoxelGridMap[front],
+			VoxelGridMap[back]
+		);
+	}
+
 
 	void Start()
 	{
@@ -32,41 +110,47 @@ public class ChunkManager : MonoBehaviour
 
 	void Update()
 	{
-		for (int i = 0; i < chunkList.Count; i++)
+		for (int i = 0; i < meshBuildList.Count; i++)
 		{
-			ChunkBuilder jobData = chunkList[i];
-			if (jobData.scheduled && jobData.handle.IsCompleted)
+			ChunkBuilder chunkBuilder = meshBuildList[i];
+			if (chunkBuilder.scheduled && chunkBuilder.handle.IsCompleted)
 			{
-				jobData.CompleteBuild();
-				chunkList.RemoveAt(i);
+				CompleteMeshBuild(i);
 			}
-			if (!jobData.scheduled)
+			if (!chunkBuilder.scheduled)
 			{
-				jobData.ScheduleBuild();
+				ScheduleMeshBuild(i);
 			}
 		}
 
-		if (chunkList.Count < maxJobsPerFrame && chunkQueue.Count > 0)
+		if (meshBuildList.Count < maxJobsPerFrame && meshBuildQueue.Count > 0)
 		{
-			int length = Mathf.Min(maxJobsPerFrame, chunkQueue.Count);
+			int length = Mathf.Min(maxJobsPerFrame, meshBuildQueue.Count);
 
 			for (int i = 0; i < length; i++)
 			{
-				chunkList.Add(chunkQueue[i]);
+				meshBuildList.Add(meshBuildQueue[i]);
 			}
 
-			chunkQueue.RemoveRange(0, length);
+			meshBuildQueue.RemoveRange(0, length);
 		}
+	}
 
-		if (Input.GetKeyDown(KeyCode.Space))
-		{
-			GameObject.Find("Text").GetComponent<Text>().text = VoxelGridMap.Count.ToString();
-		}
+	void ScheduleMeshBuild(int i)
+	{
+		AddVoxelGrids(meshBuildList[i]);
+		meshBuildList[i].ScheduleBuild();
+	}
+
+	void CompleteMeshBuild(int i)
+	{
+		meshBuildList[i].CompleteBuild();
+		meshBuildList.RemoveAt(i);
 	}
 
 	void LateUpdate()
 	{
-		if (chunkQueue.Count == 0)
+		if (meshBuildQueue.Count == 0)
 		{
 			LoadedTerrain = true;
 		}
@@ -77,68 +161,12 @@ public class ChunkManager : MonoBehaviour
 		Dispose();
 	}
 
-	public GameObject CreateChunkObject(Vector2Int offset, int lod, bool instantCompletion, bool logTime)
-	{
-		GameObject chunk = new GameObject(transform.childCount.ToString());
-		var meshRenderer = chunk.AddComponent<MeshRenderer>();
-		meshRenderer.sharedMaterial = terrainMaterial;
-
-		Mesh landMesh = new Mesh
-		{
-			indexFormat = IndexFormat.UInt32
-		};
-		Mesh waterMesh = new Mesh
-		{
-			indexFormat = IndexFormat.UInt32
-		};
-
-		RequestMesh(landMesh, waterMesh, offset, instantCompletion, logTime);
-
-		chunk.AddComponent<MeshFilter>().mesh = landMesh;
-
-		//Water is seperate object so it can have transparency
-		GameObject water = new GameObject("Water");
-		water.transform.parent = chunk.transform;
-		water.AddComponent<MeshRenderer>().sharedMaterial = waterMaterial;
-		water.AddComponent<MeshFilter>().mesh = waterMesh;
-
-		return chunk;
-	}
-
-	public void RequestMesh(Mesh landMesh, Mesh waterMesh, Vector2Int offset, bool instantCompletion = false, bool logTime = false, NativeArray<byte> customVoxelGrid = default)
-	{
-		if (instantCompletion)
-		{
-			var jobData = new ChunkBuilder
-			{
-				landMesh = landMesh,
-				waterMesh = waterMesh,
-				offset = offset,
-				customVoxelGrid = customVoxelGrid,
-				logTime = logTime
-			};
-
-			jobData.ScheduleBuild();
-			jobData.CompleteBuild();
-		}
-		else
-		{
-			chunkQueue.Add(new ChunkBuilder
-			{
-				landMesh = landMesh,
-				waterMesh = waterMesh,
-				offset = offset,
-				customVoxelGrid = customVoxelGrid,
-				logTime = logTime
-			});
-		}
-	}
-
 	public void Initialize()
 	{
-		VoxelGridMap = new NativeHashMap<Vector2Int, NativeArray<byte>>(1024, Allocator.Persistent);
-		chunkList = new();
-		chunkQueue = new();
+		ChunkMap = new();
+		VoxelGridMap = new();
+		meshBuildList = new();
+		meshBuildQueue = new();
 
 		VoxelGen = new VoxelGen(properties);
 
@@ -201,7 +229,7 @@ public class ChunkManager : MonoBehaviour
 
 	public void Dispose()
 	{
-		foreach (var job in chunkList)
+		foreach (var job in meshBuildList)
 		{
 			if (job.scheduled)
 			{
@@ -213,7 +241,6 @@ public class ChunkManager : MonoBehaviour
 		{
 			chunk.Value.Dispose();
 		}
-		VoxelGridMap.Dispose();
 
 		FaceVertices.Dispose();
 		FaceDirections.Dispose();

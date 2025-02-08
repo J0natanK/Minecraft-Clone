@@ -13,18 +13,18 @@ public class MeshEditor : Editor
 
 		if (GUILayout.Button("Generate"))
 		{
-			if (Application.isPlaying)
-			{
-				meshGenerator.Initialize();
-				meshGenerator.CreateChunkObject(Vector2Int.zero, 1, false, false);
-				meshGenerator.CreateChunkObject(Vector2Int.zero, 0, false, false);
-			}
-			else
-			{
-				meshGenerator.Initialize();
-				meshGenerator.CreateChunkObject(Vector2Int.zero, 0, true, true);
-				meshGenerator.Dispose();
-			}
+			// if (Application.isPlaying)
+			// {
+			// 	meshGenerator.Initialize();
+			// 	meshGenerator.CreateChunkObject(Vector2Int.zero, 1, false, false);
+			// 	meshGenerator.CreateChunkObject(Vector2Int.zero, 0, false, false);
+			// }
+			// else
+			// {
+			// 	meshGenerator.Initialize();
+			// 	meshGenerator.CreateChunkObject(Vector2Int.zero, 0, true, true);
+			// 	meshGenerator.Dispose();
+			// }
 
 		}
 	}
