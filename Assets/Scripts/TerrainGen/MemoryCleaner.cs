@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ChunkStorage : MonoBehaviour
+public class MemoryCleaner : MonoBehaviour
 {
 	public float maxVoxelGridMapSizeMB;
 
