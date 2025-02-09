@@ -1,10 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+// Should be responisble for cleaning up VoxelGridMap 
+// if it gets too large
 
 public class MemoryCleaner : MonoBehaviour
 {
-	public float maxVoxelGridMapSizeMB;
+	[SerializeField] float maxVoxelGridMapSizeMB;
 
 	float voxelGridSizeMB;
 
@@ -19,7 +20,7 @@ public class MemoryCleaner : MonoBehaviour
 
 		if (currentSize > maxVoxelGridMapSizeMB)
 		{
-			//Load far away chunks to disk
+			// TODO: Load far away chunks to disk?
 		}
 	}
 }

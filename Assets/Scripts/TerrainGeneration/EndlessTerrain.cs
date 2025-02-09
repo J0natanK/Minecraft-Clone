@@ -1,27 +1,23 @@
-using System.Collections.Generic;
 using UnityEngine;
-using System.Runtime.InteropServices;
-using UnityEngine.Accessibility;
 
 public class EndlessTerrain : MonoBehaviour
 {
-	public float maxViewDst;
-	public float colliderRange;
-	public float lifetimeSeconds;
-	public Transform viewer;
-	public ChunkManager chunkManager;
+	[SerializeField] float renderDst;
+	[SerializeField] float colliderDst;
+	[SerializeField] Transform viewer;
+	[SerializeField] ChunkManager chunkManager;
 
 	public static Vector2 ViewerPosition;
-	public static float MaxViewDstSqr;
-	public static float ColliderRangeSqr;
+	public static float RenderDstSqr;
+	public static float ColliderDstSqr;
 
 	int chunksVisibleInViewDst;
 
 	void Start()
 	{
-		chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / TerrainConstants.ChunkSize.x);
-		MaxViewDstSqr = maxViewDst * maxViewDst;
-		ColliderRangeSqr = colliderRange * colliderRange;
+		chunksVisibleInViewDst = Mathf.RoundToInt(renderDst / TerrainConstants.ChunkSize.x);
+		RenderDstSqr = renderDst * renderDst;
+		ColliderDstSqr = colliderDst * colliderDst;
 	}
 
 	void Update()
@@ -35,6 +31,7 @@ public class EndlessTerrain : MonoBehaviour
 		int currentChunkCoordX = (int)Mathf.Round(ViewerPosition.x / TerrainConstants.ChunkSize.x);
 		int currentChunkCoordY = (int)Mathf.Round(ViewerPosition.y / TerrainConstants.ChunkSize.x);
 
+		// Loop through all surrounding chunks
 		for (int yOffset = -chunksVisibleInViewDst; yOffset <= chunksVisibleInViewDst; yOffset++)
 		{
 			for (int xOffset = -chunksVisibleInViewDst; xOffset <= chunksVisibleInViewDst; xOffset++)
@@ -46,6 +43,7 @@ public class EndlessTerrain : MonoBehaviour
 					TerrainChunk viewedChunk = ChunkManager.ChunkMap[viewedChunkCoord];
 					viewedChunk.UpdateVisibilty();
 
+					//Destroy non visible chunks to save memory
 					if (!viewedChunk.visible && !viewedChunk.requestingMesh)
 					{
 						if (viewedChunk.terrainMesh != null)

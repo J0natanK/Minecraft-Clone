@@ -11,6 +11,7 @@ public class Blocks
 	public static readonly byte Log = 6;
 	public static readonly byte Leaves = 7;
 
+	//TODO: Tweak UVs to remove texture bleeding (or modify atlas?)
 	//The bottom left UVs for all 6 faces
 	public static FaceUVs GetUVs(int blockIndex)
 	{

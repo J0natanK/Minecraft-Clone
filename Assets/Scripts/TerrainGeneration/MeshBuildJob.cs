@@ -20,7 +20,6 @@ struct MeshBuildJob : IJob
 
 	[ReadOnly] public int2 chunkDimensions;
 
-	//Neighbouring chunks
 	[ReadOnly] public NativeArray<byte> thisVoxelGrid;
 	[ReadOnly] public NativeArray<byte> leftVoxelGrid;
 	[ReadOnly] public NativeArray<byte> rightVoxelGrid;
@@ -35,22 +34,21 @@ struct MeshBuildJob : IJob
 			{
 				for (int z = 0; z < chunkDimensions.x; z++)
 				{
-					int blockIndex = thisVoxelGrid[Utils.VoxelIndex(x, y, z)];
-					if (blockIndex != Blocks.Air)
+					int block = thisVoxelGrid[Utils.VoxelIndex(x, y, z)];
+					if (block != Blocks.Air)
 					{
-						AddVoxel(x, y, z, blockIndex);
+						AddVoxel(x, y, z, block);
 					}
 				}
 			}
-
 		}
 	}
 
-	private void AddVoxel(int x, int y, int z, int blockIndex)
+	private void AddVoxel(int x, int y, int z, int block)
 	{
-		FaceUVs blockUVs = Blocks.GetUVs(blockIndex);
+		FaceUVs blockUVs = Blocks.GetUVs(block);
 
-		if (blockIndex == Blocks.Water)
+		if (block == Blocks.Water)
 		{
 			AddWaterQuad(new int3(x, y, z));
 			return;
@@ -110,7 +108,9 @@ struct MeshBuildJob : IJob
 		waterUvs.Add(new float2(0, 0));
 	}
 
-	private bool IsFaceVisible(int x, int y, int z, int faceIndex)
+	// The face is only visible if the neighbour is an air or water block
+	// Check the neighbouring chunk if the face is on the edge
+	bool IsFaceVisible(int x, int y, int z, int faceIndex)
 	{
 		int3 direction = faceDirections[faceIndex];
 		int3 neighbor = new int3(x + direction.x, y + direction.y, z + direction.z);

@@ -1,16 +1,13 @@
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
-using Unity.Mathematics;
 
 public class ChunkManager : MonoBehaviour
 {
 	public Material terrainMaterial;
 	public Material waterMaterial;
-	public TerrainProperties properties;
-
-	[Header("Performance")]
-	public int maxJobsPerFrame;
+	[SerializeField] TerrainProperties properties;
+	[SerializeField] int maxMeshBuildersPerFrame;
 
 	public static VoxelGenerator VoxelGen;
 	public static bool LoadedTerrain;
@@ -35,6 +32,8 @@ public class ChunkManager : MonoBehaviour
 
 	public void RequestChunkMesh(Mesh terrainMesh, Mesh waterMesh, Vector2Int position, NativeArray<byte> customVoxelGrid = default, bool instantCompletion = false)
 	{
+		//Seperate terrain and water meshes because water is transparent (TODO: combine into one mesh)
+
 		if (terrainMesh == null)
 		{
 			terrainMesh = new();
@@ -43,6 +42,7 @@ public class ChunkManager : MonoBehaviour
 		{
 			waterMesh = new();
 		}
+
 		MeshBuilder meshBuilder = new(terrainMesh, waterMesh, position, customVoxelGrid);
 
 		if (instantCompletion)
@@ -97,30 +97,42 @@ public class ChunkManager : MonoBehaviour
 		);
 	}
 
-
 	void Start()
 	{
-		Initialize();
+		Init();
+	}
+
+	public void Init()
+	{
+		ChunkMap = new();
+		VoxelGridMap = new();
+		meshBuildList = new();
+		meshBuildQueue = new();
+
+		VoxelGen = new VoxelGenerator(properties);
+
+		TerrainConstants.Init();
 	}
 
 	void Update()
 	{
 		for (int i = 0; i < meshBuildList.Count; i++)
 		{
-			MeshBuilder chunkBuilder = meshBuildList[i];
-			if (chunkBuilder.scheduled && chunkBuilder.handle.IsCompleted)
+			MeshBuilder meshBuilder = meshBuildList[i];
+			if (meshBuilder.scheduled && meshBuilder.handle.IsCompleted)
 			{
 				CompleteMeshBuild(i);
 			}
-			if (!chunkBuilder.scheduled)
+			if (!meshBuilder.scheduled)
 			{
 				ScheduleMeshBuild(i);
 			}
 		}
 
-		if (meshBuildList.Count < maxJobsPerFrame && meshBuildQueue.Count > 0)
+		// Too many meshbuilders at once can lead to lag spikes
+		if (meshBuildList.Count < maxMeshBuildersPerFrame && meshBuildQueue.Count > 0)
 		{
-			int length = Mathf.Min(maxJobsPerFrame, meshBuildQueue.Count);
+			int length = Mathf.Min(maxMeshBuildersPerFrame, meshBuildQueue.Count);
 
 			for (int i = 0; i < length; i++)
 			{
@@ -154,18 +166,6 @@ public class ChunkManager : MonoBehaviour
 	private void OnDestroy()
 	{
 		Dispose();
-	}
-
-	public void Initialize()
-	{
-		ChunkMap = new();
-		VoxelGridMap = new();
-		meshBuildList = new();
-		meshBuildQueue = new();
-
-		VoxelGen = new VoxelGenerator(properties);
-
-		TerrainConstants.Init();
 	}
 
 	public void Dispose()

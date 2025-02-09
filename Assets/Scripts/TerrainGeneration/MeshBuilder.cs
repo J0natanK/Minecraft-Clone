@@ -3,21 +3,18 @@ using Unity.Jobs;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine.Rendering;
-using System.Diagnostics;
 
 class MeshBuilder
 {
-	public Mesh terrainMesh, waterMesh;
-	public Vector2Int position;
+	public Mesh terrainMesh { get; private set; }
+	public Mesh waterMesh { get; private set; }
+	public Vector2Int position { get; private set; }
 
-	public NativeArray<byte> customVoxelGrid;
+	public NativeArray<byte> customVoxelGrid { get; private set; }
 
-	public bool scheduled;
-	public bool logTime;
+	public bool scheduled { get; private set; }
 
-	public Stopwatch watch;
-
-	public JobHandle handle;
+	public JobHandle handle { get; private set; }
 
 	NativeList<float3> vertices;
 	NativeList<int> triangles;
@@ -57,12 +54,6 @@ class MeshBuilder
 
 	public void ScheduleBuild()
 	{
-		if (logTime)
-		{
-			watch = new();
-			watch.Start();
-		}
-
 		vertices = new NativeList<float3>(Allocator.Persistent);
 		triangles = new NativeList<int>(Allocator.Persistent);
 		uvs = new NativeList<float2>(Allocator.Persistent);
@@ -106,9 +97,9 @@ class MeshBuilder
 		NativeArray<Vector3> vertexArray = vertices.AsArray().Reinterpret<Vector3>();
 		NativeArray<int> triangleArray = triangles.AsArray();
 		NativeArray<Vector2> uvArray = uvs.AsArray().Reinterpret<Vector2>();
+
 		AssignMeshData(terrainMesh, vertexArray, triangleArray, uvArray);
 
-		//Water mesh
 		if (waterVertices.Length > 0)
 		{
 			NativeArray<Vector3> wVertexArray = waterVertices.AsArray().Reinterpret<Vector3>();
@@ -133,13 +124,6 @@ class MeshBuilder
 		vertexArray.Dispose();
 		triangleArray.Dispose();
 		uvArray.Dispose();
-
-		if (logTime)
-		{
-			watch.Stop();
-			UnityEngine.Debug.Log("Execution Time: " + watch.ElapsedMilliseconds + " ms");
-		}
-
 	}
 
 	void AssignMeshData(Mesh mesh, NativeArray<Vector3> vertices, NativeArray<int> indices, NativeArray<Vector2> uvs)

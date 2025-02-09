@@ -1,3 +1,4 @@
+//TODO: Distance based fog that blends into skybox
 Shader "FX/DistanceFog"
 {
 	Properties

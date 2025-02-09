@@ -12,7 +12,6 @@ public class LoadingScreen : MonoBehaviour
 	void Start()
 	{
 		player.enabled = false;
-		player.transform.rotation = Quaternion.Euler(-90, 0, 0);
 		loadingScreen.enabled = true;
 		enabled = false;
 	}
@@ -22,7 +21,6 @@ public class LoadingScreen : MonoBehaviour
 		{
 			player.enabled = true;
 			loadingScreen.enabled = false;
-			player.transform.rotation = Quaternion.Euler(0, 0, 0);
 
 			enabled = true;
 		}
