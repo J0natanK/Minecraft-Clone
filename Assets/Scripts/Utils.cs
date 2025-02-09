@@ -6,7 +6,7 @@ public static class Utils
 	//Converts 3D index into 1D
 	public static int VoxelIndex(int x, int y, int z)
 	{
-		return x * ChunkManager.ChunkDimensions.y * ChunkManager.ChunkDimensions.x + y * ChunkManager.ChunkDimensions.x + z;
+		return x * TerrainConstants.ChunkSize.y * TerrainConstants.ChunkSize.x + y * TerrainConstants.ChunkSize.x + z;
 	}
 
 	//Sampled curve that can be used in job

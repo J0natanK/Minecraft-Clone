@@ -10,7 +10,7 @@ public class MemoryCleaner : MonoBehaviour
 
 	void Start()
 	{
-		voxelGridSizeMB = ChunkManager.ChunkDimensions.x * ChunkManager.ChunkDimensions.y * ChunkManager.ChunkDimensions.x / 1000000;
+		voxelGridSizeMB = TerrainConstants.ChunkSize.x * TerrainConstants.ChunkSize.y * TerrainConstants.ChunkSize.x / 1000000;
 	}
 
 	void Update()

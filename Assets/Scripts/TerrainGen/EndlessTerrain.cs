@@ -19,7 +19,7 @@ public class EndlessTerrain : MonoBehaviour
 
 	void Start()
 	{
-		chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / ChunkManager.ChunkDimensions.x);
+		chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / TerrainConstants.ChunkSize.x);
 		MaxViewDstSqr = maxViewDst * maxViewDst;
 		ColliderRangeSqr = colliderRange * colliderRange;
 	}
@@ -32,8 +32,8 @@ public class EndlessTerrain : MonoBehaviour
 
 	void UpdateVisibleChunks()
 	{
-		int currentChunkCoordX = (int)Mathf.Round(ViewerPosition.x / ChunkManager.ChunkDimensions.x);
-		int currentChunkCoordY = (int)Mathf.Round(ViewerPosition.y / ChunkManager.ChunkDimensions.x);
+		int currentChunkCoordX = (int)Mathf.Round(ViewerPosition.x / TerrainConstants.ChunkSize.x);
+		int currentChunkCoordY = (int)Mathf.Round(ViewerPosition.y / TerrainConstants.ChunkSize.x);
 
 		for (int yOffset = -chunksVisibleInViewDst; yOffset <= chunksVisibleInViewDst; yOffset++)
 		{
@@ -56,7 +56,7 @@ public class EndlessTerrain : MonoBehaviour
 				}
 				else
 				{
-					Vector2Int chunkPosition = viewedChunkCoord * ChunkManager.ChunkDimensions.x;
+					Vector2Int chunkPosition = viewedChunkCoord * TerrainConstants.ChunkSize.x;
 					ChunkManager.ChunkMap.Add(viewedChunkCoord, chunkManager.CreateChunk(chunkPosition));
 				}
 			}

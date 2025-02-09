@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using UnityEngine.Rendering;
 using System.Diagnostics;
 
-class ChunkBuilder
+class MeshBuilder
 {
 	public Mesh terrainMesh, waterMesh;
 	public Vector2Int position;
@@ -33,7 +33,7 @@ class ChunkBuilder
 	NativeArray<byte> frontVoxelGrid;
 	NativeArray<byte> backVoxelGrid;
 
-	public ChunkBuilder(Mesh terrainMesh, Mesh waterMesh, Vector2Int position, NativeArray<byte> customVoxelGrid = default)
+	public MeshBuilder(Mesh terrainMesh, Mesh waterMesh, Vector2Int position, NativeArray<byte> customVoxelGrid = default)
 	{
 		this.terrainMesh = terrainMesh;
 		this.waterMesh = waterMesh;
@@ -71,7 +71,7 @@ class ChunkBuilder
 		waterTriangles = new NativeList<int>(Allocator.Persistent);
 		waterUvs = new NativeList<float2>(Allocator.Persistent);
 
-		Vector2Int chunkDimensions = ChunkManager.ChunkDimensions;
+		Vector2Int chunkDimensions = TerrainConstants.ChunkSize;
 
 		MeshBuildJob job = new MeshBuildJob
 		{
@@ -89,9 +89,9 @@ class ChunkBuilder
 			frontVoxelGrid = frontVoxelGrid,
 			backVoxelGrid = backVoxelGrid,
 
-			faceDirections = ChunkManager.FaceDirections,
-			uvCordinates = ChunkManager.UvCoordinates,
-			faceVertices = ChunkManager.FaceVertices,
+			faceDirections = TerrainConstants.FaceDirections,
+			uvCordinates = TerrainConstants.UvCoordinates,
+			faceVertices = TerrainConstants.FaceVertices,
 			chunkDimensions = new int2(chunkDimensions.x, chunkDimensions.y),
 		};
 
@@ -139,6 +139,7 @@ class ChunkBuilder
 			watch.Stop();
 			UnityEngine.Debug.Log("Execution Time: " + watch.ElapsedMilliseconds + " ms");
 		}
+
 	}
 
 	void AssignMeshData(Mesh mesh, NativeArray<Vector3> vertices, NativeArray<int> indices, NativeArray<Vector2> uvs)

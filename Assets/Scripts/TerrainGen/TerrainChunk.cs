@@ -29,9 +29,9 @@ public class TerrainChunk
 		this.waterMesh = waterMesh;
 		this.chunkManager = chunkManager;
 
-		bounds = new Bounds(new Vector2(position.x, position.y), Vector2.one * ChunkManager.ChunkDimensions.x);
+		bounds = new Bounds(new Vector2(position.x, position.y), Vector2.one * TerrainConstants.ChunkSize.x);
 
-		meshPosition = new Vector3(position.x - (ChunkManager.ChunkDimensions.x / 2), 0, position.y - (ChunkManager.ChunkDimensions.x / 2));
+		meshPosition = new Vector3(position.x - (TerrainConstants.ChunkSize.x / 2), 0, position.y - (TerrainConstants.ChunkSize.x / 2));
 		chunkPosition = position;
 
 		terrainParams = new RenderParams(chunkManager.terrainMaterial);
